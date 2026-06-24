@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { registerForPushNotifications } from '@/lib/notifications'
 import { House, HouseMember } from '@/types/database'
 
 export function useHouse(userId: string | undefined) {
@@ -49,6 +50,7 @@ export function useHouse(userId: string | undefined) {
     const { error: memberError } = await supabase
       .from('house_members')
       .insert({ house_id: data.id, user_id: userId })
+    if (userId) registerForPushNotifications(userId).catch(() => {})
     return { error: memberError?.message ?? null }
   }
 
@@ -63,6 +65,7 @@ export function useHouse(userId: string | undefined) {
       .from('house_members')
       .insert({ house_id: foundHouse.id, user_id: userId })
     if (error?.code === '23505') return { error: "You're already in a house. Leave your current house first." }
+    if (userId) registerForPushNotifications(userId).catch(() => {})
     return { error: error?.message ?? null }
   }
 
