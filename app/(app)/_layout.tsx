@@ -1,8 +1,20 @@
-import { Tabs } from 'expo-router'
+import { useEffect } from 'react'
+import { Tabs, useRouter } from 'expo-router'
 import { Text, StyleSheet } from 'react-native'
 import { Colors, Shadows, Radii } from '@/constants/theme'
+import { useAuth } from '@/hooks/useAuth'
+import { useHouse } from '@/hooks/useHouse'
 
 export default function AppLayout() {
+  const { session } = useAuth()
+  const { house, loading: houseLoading } = useHouse(session?.user.id)
+  const router = useRouter()
+
+  useEffect(() => {
+    if (houseLoading) return
+    if (!house) router.replace('/no-house')
+  }, [house, houseLoading])
+
   return (
     <Tabs
       screenOptions={{
