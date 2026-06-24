@@ -1,0 +1,3 @@
+# Supabase project config — fill in project_id before using CLI
+[project]
+project_id = "tidy"
