@@ -20,7 +20,7 @@ export const PrimaryGradient = {
   end: { x: 1, y: 1 } as LinearGradientPoint,
 }
 
-export const AvatarGradients: Array<[string, string]> = [
+export const AvatarGradients = [
   ['#ff7c5c', '#ffb347'],
   ['#a8d8a8', '#5a9e5a'],
   ['#b8a9e0', '#7c6abf'],
@@ -29,7 +29,7 @@ export const AvatarGradients: Array<[string, string]> = [
   ['#f9a8d4', '#ec4899'],
   ['#5eead4', '#0d9488'],
   ['#bef264', '#65a30d'],
-]
+] as const
 
 export const Radii = {
   card: 14,
