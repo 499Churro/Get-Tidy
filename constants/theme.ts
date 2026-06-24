@@ -40,6 +40,14 @@ export const Radii = {
   avatar: 999,
 } as const
 
+export const Fonts = {
+  regular: 'DMSans_400Regular',
+  medium: 'DMSans_500Medium',
+  semibold: 'DMSans_600SemiBold',
+  bold: 'DMSans_700Bold',
+  extrabold: 'DMSans_800ExtraBold',
+} as const
+
 export const Shadows = {
   card: {
     shadowColor: '#000',
