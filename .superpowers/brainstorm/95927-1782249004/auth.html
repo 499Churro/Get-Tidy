@@ -1,0 +1,37 @@
+<h2>How do users sign up?</h2>
+<p class="subtitle">Auth method affects friction, trust, and how roommates identify each other in the app.</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Apple / Google Sign-In</h3>
+      <p>One tap, no password. Native feel on iOS. Auto-fills display name and avatar.</p>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px;">Lowest friction. Required by App Store if you offer any social login. Best for college users who already have Apple/Google accounts.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Phone Number (OTP)</h3>
+      <p>Enter phone number, verify with a code. No password needed.</p>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px;">Very common in social apps (WhatsApp, Splitwise). Easy to identify roommates. Costs $$ per SMS at scale.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Email + Password</h3>
+      <p>Classic sign-up. Familiar but highest friction.</p>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px;">No extra cost. Works everywhere. But college users bounce on email forms — feels dated for a consumer app.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="d" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>Apple/Google + Email fallback</h3>
+      <p>Social login first, email as backup for web or Android users without Google.</p>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px;">Recommended. Covers iOS native feel + web accessibility requirement.</p>
+    </div>
+  </div>
+</div>

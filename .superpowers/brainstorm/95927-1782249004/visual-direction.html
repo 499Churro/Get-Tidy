@@ -1,0 +1,127 @@
+<h2>Visual direction</h2>
+<p class="subtitle">Three distinct personalities. Pick the one that feels like Tidy.</p>
+
+<div class="cards">
+
+  <!-- Option A: Raw & Tactile -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #faf9f6; padding: 20px; font-family: 'Georgia', serif;">
+      <div style="max-width: 180px; margin: 0 auto;">
+        <div style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 14px;">
+          <span style="font-size: 18px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.5px;">tidy</span>
+          <span style="font-size: 9px; color: #999; letter-spacing: 0.1em; text-transform: uppercase;">Apt 4B</span>
+        </div>
+        <div style="font-size: 9px; color: #999; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Today · 3 chores</div>
+        <div style="border-top: 1.5px solid #1a1a1a; padding: 10px 0; border-bottom: 1px solid #e5e5e5;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 16px; height: 16px; border: 1.5px solid #1a1a1a; border-radius: 50%; flex-shrink: 0;"></div>
+            <div>
+              <div style="font-size: 11px; color: #1a1a1a; font-weight: 600;">Sweep kitchen</div>
+              <div style="font-size: 9px; color: #999;">You</div>
+            </div>
+          </div>
+        </div>
+        <div style="padding: 10px 0; border-bottom: 1px solid #e5e5e5;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 16px; height: 16px; border: 1.5px solid #1a1a1a; border-radius: 50%; flex-shrink: 0; background: #1a1a1a; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 6px; height: 6px; background: #faf9f6; border-radius: 50%;"></div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: #999; text-decoration: line-through;">Vacuum living room</div>
+              <div style="font-size: 9px; color: #bbb;">Jordan · done</div>
+            </div>
+          </div>
+        </div>
+        <div style="padding: 10px 0; border-bottom: 1px solid #e5e5e5;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 16px; height: 16px; border: 1.5px solid #e54646; border-radius: 50%; flex-shrink: 0;"></div>
+            <div>
+              <div style="font-size: 11px; color: #1a1a1a; font-weight: 600;">Clean bathroom</div>
+              <div style="font-size: 9px; color: #e54646;">Alex · overdue</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 14px; background: #1a1a1a; border-radius: 6px; padding: 8px; text-align: center;">
+          <span style="color: #faf9f6; font-size: 9px; letter-spacing: 0.05em;">+ Add chore</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Editorial / Raw</h3>
+      <p>Cream paper background, serif wordmark, stark black typography, no color except red for overdue. Feels like a well-designed notebook — analog warmth, zero clutter.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Punchy & Energetic -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0d0d0d; padding: 20px; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="max-width: 180px; margin: 0 auto;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <span style="font-size: 18px; font-weight: 900; color: #fff; letter-spacing: -1px;">TIDY<span style="color: #c8ff00;">.</span></span>
+          <span style="background: #1f1f1f; border-radius: 20px; padding: 3px 8px; color: #999; font-size: 8px;">Apt 4B</span>
+        </div>
+        <div style="background: #c8ff00; border-radius: 10px; padding: 10px; margin-bottom: 8px;">
+          <div style="font-size: 9px; font-weight: 800; color: #0d0d0d; text-transform: uppercase; margin-bottom: 2px;">Yours · due today</div>
+          <div style="font-size: 13px; font-weight: 700; color: #0d0d0d;">Sweep kitchen</div>
+        </div>
+        <div style="background: #1a1a1a; border-radius: 10px; padding: 10px; margin-bottom: 6px;">
+          <div style="font-size: 9px; color: #666; text-transform: uppercase; margin-bottom: 2px;">Jordan</div>
+          <div style="font-size: 12px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 6px;">
+            <span style="color: #c8ff00; font-size: 14px;">✓</span> Vacuum living room
+          </div>
+        </div>
+        <div style="background: #1a1a1a; border-radius: 10px; padding: 10px; border: 1.5px solid #ff4444; margin-bottom: 10px;">
+          <div style="font-size: 9px; color: #ff4444; text-transform: uppercase; margin-bottom: 2px;">Alex · OVERDUE</div>
+          <div style="font-size: 12px; font-weight: 600; color: #fff;">Clean bathroom</div>
+        </div>
+        <div style="background: #c8ff00; border-radius: 8px; padding: 8px; text-align: center;">
+          <span style="font-size: 10px; font-weight: 800; color: #0d0d0d; text-transform: uppercase;">+ New chore</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Dark & Electric</h3>
+      <p>Pure black base, neon yellow-green accent, heavy weight type. High contrast, zero ambiguity. Feels like a tool that gets out of your way and lets the data pop.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Soft Modern -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #f0f4ff; padding: 20px; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="max-width: 180px; margin: 0 auto;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+          <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;">✨</div>
+          <div>
+            <div style="font-size: 11px; font-weight: 700; color: #1e1b4b;">Tidy</div>
+            <div style="font-size: 8px; color: #818cf8;">Apt 4B · 3 open</div>
+          </div>
+        </div>
+        <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 14px; padding: 12px; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(99,102,241,0.3);">
+          <div style="font-size: 8px; color: #c7d2fe; margin-bottom: 4px;">YOUR CHORE · DUE TODAY</div>
+          <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 8px;">Sweep kitchen 🧹</div>
+          <div style="background: rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 10px; display: inline-block;">
+            <span style="font-size: 9px; color: #fff; font-weight: 600;">Mark done</span>
+          </div>
+        </div>
+        <div style="background: #fff; border-radius: 12px; padding: 10px; margin-bottom: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div style="font-size: 10px; font-weight: 600; color: #1e1b4b; text-decoration: line-through; opacity: 0.5;">Vacuum living room</div>
+              <div style="font-size: 8px; color: #a5b4fc;">Jordan ✓</div>
+            </div>
+            <span style="font-size: 14px;">✅</span>
+          </div>
+        </div>
+        <div style="background: #fff; border-radius: 12px; padding: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-left: 3px solid #f87171;">
+          <div style="font-size: 10px; font-weight: 600; color: #1e1b4b;">Clean bathroom</div>
+          <div style="font-size: 8px; color: #f87171;">Alex · 2 days overdue</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Soft & Friendly</h3>
+      <p>Light lavender background, purple gradient hero card for your active chore, white cards for the list. Warm, approachable — closer to Duolingo/Hinge energy.</p>
+    </div>
+  </div>
+
+</div>

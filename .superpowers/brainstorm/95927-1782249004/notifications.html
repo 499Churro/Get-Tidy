@@ -1,0 +1,40 @@
+<h2>What triggers a push notification?</h2>
+<p class="subtitle">Notifications are the app's voice. Too many = ignored. Too few = the app disappears. Pick which events should send a push. (Select all that apply)</p>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="assigned" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Chore assigned to you</h3>
+      <p>A roommate assigns a chore directly to you.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="due" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Chore due today</h3>
+      <p>A morning reminder when a chore is due that day.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="overdue" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Chore overdue</h3>
+      <p>A nudge when an assigned chore hasn't been done past its due date.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="completed" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>Roommate completed a chore</h3>
+      <p>"Alex just swept the kitchen 🧹" — social proof, positive reinforcement.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="joined" onclick="toggleSelect(this)">
+    <div class="letter">E</div>
+    <div class="content">
+      <h3>New roommate joined</h3>
+      <p>Someone joined your house — good to know.</p>
+    </div>
+  </div>
+</div>

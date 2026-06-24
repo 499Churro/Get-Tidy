@@ -1,0 +1,223 @@
+<h2>Tracking roommate progress</h2>
+<p class="subtitle">Week strip on top, chore list below — where and how do you see what everyone else has done?</p>
+
+<div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; font-family: system-ui, -apple-system, sans-serif;">
+
+  <!-- Option A: Progress in House tab -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)" style="max-width: 220px;">
+    <div class="card-image" style="background: #fff8f4; padding: 16px;">
+      <div style="width: 200px; margin: 0 auto;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="width: 22px; height: 22px; background: linear-gradient(135deg, #ff7c5c, #ffb347); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 11px;">✦</div>
+            <span style="font-size: 13px; font-weight: 800; color: #1a1a1a;">tidy</span>
+          </div>
+          <span style="font-size: 8px; background: #f0ebe7; color: #92786a; padding: 3px 8px; border-radius: 20px; font-weight: 600;">Apt 4B</span>
+        </div>
+
+        <!-- House tab showing progress -->
+        <div style="font-size: 9px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px;">This week's house progress</div>
+
+        <!-- Per person rows -->
+        <div style="background: #fff; border-radius: 12px; padding: 10px 11px; margin-bottom: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 20px; height: 20px; background: linear-gradient(135deg, #ff7c5c, #ffb347); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #fff; font-weight: 700;">Y</div>
+              <span style="font-size: 9px; font-weight: 700; color: #1a1a1a;">You</span>
+            </div>
+            <span style="font-size: 8px; color: #ff7c5c; font-weight: 700;">3/4</span>
+          </div>
+          <div style="background: #f0ebe7; border-radius: 20px; height: 5px; overflow: hidden;">
+            <div style="width: 75%; height: 100%; background: linear-gradient(90deg, #ff7c5c, #ffb347); border-radius: 20px;"></div>
+          </div>
+        </div>
+
+        <div style="background: #fff; border-radius: 12px; padding: 10px 11px; margin-bottom: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 20px; height: 20px; background: #f0ebe7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #92786a; font-weight: 700;">J</div>
+              <span style="font-size: 9px; font-weight: 700; color: #1a1a1a;">Jordan</span>
+            </div>
+            <span style="font-size: 8px; color: #92786a; font-weight: 700;">4/4</span>
+          </div>
+          <div style="background: #f0ebe7; border-radius: 20px; height: 5px; overflow: hidden;">
+            <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #ff7c5c, #ffb347); border-radius: 20px;"></div>
+          </div>
+        </div>
+
+        <div style="background: #fff; border-radius: 12px; padding: 10px 11px; margin-bottom: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 20px; height: 20px; background: #f0ebe7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #92786a; font-weight: 700;">A</div>
+              <span style="font-size: 9px; font-weight: 700; color: #1a1a1a;">Alex</span>
+            </div>
+            <span style="font-size: 8px; color: #ff7c5c; font-weight: 700;">1/4</span>
+          </div>
+          <div style="background: #f0ebe7; border-radius: 20px; height: 5px; overflow: hidden;">
+            <div style="width: 25%; height: 100%; background: linear-gradient(90deg, #ff7c5c, #ffb347); border-radius: 20px;"></div>
+          </div>
+        </div>
+
+        <div style="background: #fff; border-radius: 12px; padding: 10px 11px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 20px; height: 20px; background: #f0ebe7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #92786a; font-weight: 700;">S</div>
+              <span style="font-size: 9px; font-weight: 700; color: #1a1a1a;">Sam</span>
+            </div>
+            <span style="font-size: 8px; color: #92786a; font-weight: 700;">2/3</span>
+          </div>
+          <div style="background: #f0ebe7; border-radius: 20px; height: 5px; overflow: hidden;">
+            <div style="width: 66%; height: 100%; background: linear-gradient(90deg, #ff7c5c, #ffb347); border-radius: 20px;"></div>
+          </div>
+        </div>
+
+        <!-- Bottom nav -->
+        <div style="margin-top: 12px; background: #fff; border-radius: 16px; padding: 8px 20px; display: flex; justify-content: space-around; box-shadow: 0 2px 10px rgba(0,0,0,0.07);">
+          <div style="text-align: center; opacity: 0.4;"><div style="font-size: 14px;">🏠</div><div style="font-size: 7px; color: #92786a; margin-top: 1px;">Chores</div></div>
+          <div style="text-align: center;"><div style="font-size: 14px;">👥</div><div style="font-size: 7px; font-weight: 700; color: #ff7c5c; margin-top: 1px;">House</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>House tab — weekly progress</h3>
+      <p>Progress bars per roommate live in the House tab. Chores tab stays clean and focused. Tap House anytime to check who's keeping up.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Avatars on week strip -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)" style="max-width: 220px;">
+    <div class="card-image" style="background: #fff8f4; padding: 16px;">
+      <div style="width: 200px; margin: 0 auto;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="width: 22px; height: 22px; background: linear-gradient(135deg, #ff7c5c, #ffb347); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 11px;">✦</div>
+            <span style="font-size: 13px; font-weight: 800; color: #1a1a1a;">tidy</span>
+          </div>
+          <span style="font-size: 8px; background: #f0ebe7; color: #92786a; padding: 3px 8px; border-radius: 20px; font-weight: 600;">Apt 4B</span>
+        </div>
+
+        <!-- Week strip -->
+        <div style="display: flex; gap: 3px; margin-bottom: 10px;">
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: #f0ebe7;">
+            <div style="font-size: 7px; color: #b0a099; font-weight: 600;">M</div>
+            <div style="font-size: 8px; color: #92786a; font-weight: 600;">23</div>
+            <div style="width: 4px; height: 4px; background: #22c55e; border-radius: 50%; margin: 2px auto 0;"></div>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: linear-gradient(135deg, #ff7c5c, #ffb347); box-shadow: 0 2px 6px rgba(255,124,92,0.3);">
+            <div style="font-size: 7px; color: rgba(255,255,255,0.8); font-weight: 600;">T</div>
+            <div style="font-size: 8px; color: #fff; font-weight: 700;">24</div>
+            <div style="width: 4px; height: 4px; background: rgba(255,255,255,0.7); border-radius: 50%; margin: 2px auto 0;"></div>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: #f0ebe7;">
+            <div style="font-size: 7px; color: #b0a099; font-weight: 600;">W</div>
+            <div style="font-size: 8px; color: #92786a; font-weight: 600;">25</div>
+            <div style="width: 4px; height: 4px; background: #ff7c5c; border-radius: 50%; margin: 2px auto 0;"></div>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: #f0ebe7;">
+            <div style="font-size: 7px; color: #b0a099; font-weight: 600;">T</div>
+            <div style="font-size: 8px; color: #92786a; font-weight: 600;">26</div>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: #f0ebe7;">
+            <div style="font-size: 7px; color: #b0a099; font-weight: 600;">F</div>
+            <div style="font-size: 8px; color: #92786a; font-weight: 600;">27</div>
+            <div style="width: 4px; height: 4px; background: #ffb347; border-radius: 50%; margin: 2px auto 0;"></div>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: #f0ebe7;">
+            <div style="font-size: 7px; color: #b0a099; font-weight: 600;">S</div>
+            <div style="font-size: 8px; color: #92786a; font-weight: 600;">28</div>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: #f0ebe7;">
+            <div style="font-size: 7px; color: #b0a099; font-weight: 600;">S</div>
+            <div style="font-size: 8px; color: #92786a; font-weight: 600;">29</div>
+          </div>
+        </div>
+
+        <!-- Roommate avatar row with mini progress -->
+        <div style="display: flex; gap: 6px; margin-bottom: 10px; background: #fff; border-radius: 12px; padding: 8px 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+          <div style="flex: 1; text-align: center;">
+            <div style="width: 22px; height: 22px; background: linear-gradient(135deg, #ff7c5c, #ffb347); border-radius: 50%; margin: 0 auto 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #fff; font-weight: 700;">Y</div>
+            <div style="font-size: 7px; color: #ff7c5c; font-weight: 700;">3/4</div>
+          </div>
+          <div style="flex: 1; text-align: center;">
+            <div style="width: 22px; height: 22px; background: #f0ebe7; border-radius: 50%; margin: 0 auto 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #92786a; font-weight: 700; border: 1.5px solid #22c55e;">J</div>
+            <div style="font-size: 7px; color: #22c55e; font-weight: 700;">4/4 ✓</div>
+          </div>
+          <div style="flex: 1; text-align: center;">
+            <div style="width: 22px; height: 22px; background: #f0ebe7; border-radius: 50%; margin: 0 auto 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #92786a; font-weight: 700;">A</div>
+            <div style="font-size: 7px; color: #b0a099; font-weight: 700;">1/4</div>
+          </div>
+          <div style="flex: 1; text-align: center;">
+            <div style="width: 22px; height: 22px; background: #f0ebe7; border-radius: 50%; margin: 0 auto 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #92786a; font-weight: 700;">S</div>
+            <div style="font-size: 7px; color: #b0a099; font-weight: 700;">2/3</div>
+          </div>
+        </div>
+
+        <!-- Chores below -->
+        <div style="background: linear-gradient(135deg, #ff7c5c, #ffb347); border-radius: 12px; padding: 11px; margin-bottom: 6px; box-shadow: 0 4px 12px rgba(255,124,92,0.25);">
+          <div style="font-size: 7px; color: rgba(255,255,255,0.75); text-transform: uppercase; margin-bottom: 2px;">Your chore</div>
+          <div style="font-size: 12px; font-weight: 800; color: #fff;">Sweep kitchen</div>
+        </div>
+        <div style="background: #fff; border-radius: 12px; padding: 9px 11px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); display: flex; gap: 8px; align-items: center;">
+          <div style="width: 15px; height: 15px; border: 1.5px solid #e0d5cf; border-radius: 50%;"></div>
+          <div><div style="font-size: 9px; font-weight: 600; color: #1a1a1a;">Take out trash</div><div style="font-size: 7px; color: #b0a099;">Jordan</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Avatar row on home screen</h3>
+      <p>A compact avatar strip lives right below the week strip, showing each roommate's weekly completion at a glance. No tab switch needed.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Tap chore to see who's done what -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)" style="max-width: 220px;">
+    <div class="card-image" style="background: #fff8f4; padding: 16px;">
+      <div style="width: 200px; margin: 0 auto;">
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
+          <div style="width: 22px; height: 22px; background: linear-gradient(135deg, #ff7c5c, #ffb347); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 11px;">✦</div>
+          <span style="font-size: 13px; font-weight: 800; color: #1a1a1a;">tidy</span>
+        </div>
+
+        <!-- Week strip -->
+        <div style="display: flex; gap: 3px; margin-bottom: 10px;">
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: #f0ebe7;"><div style="font-size: 7px; color: #b0a099;">M</div><div style="font-size: 8px; color: #92786a; font-weight: 600;">23</div></div>
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: linear-gradient(135deg, #ff7c5c, #ffb347);"><div style="font-size: 7px; color: rgba(255,255,255,0.8);">T</div><div style="font-size: 8px; color: #fff; font-weight: 700;">24</div></div>
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: #f0ebe7;"><div style="font-size: 7px; color: #b0a099;">W</div><div style="font-size: 8px; color: #92786a; font-weight: 600;">25</div></div>
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: #f0ebe7;"><div style="font-size: 7px; color: #b0a099;">T</div><div style="font-size: 8px; color: #92786a; font-weight: 600;">26</div></div>
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: #f0ebe7;"><div style="font-size: 7px; color: #b0a099;">F</div><div style="font-size: 8px; color: #92786a; font-weight: 600;">27</div></div>
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: #f0ebe7;"><div style="font-size: 7px; color: #b0a099;">S</div><div style="font-size: 8px; color: #92786a; font-weight: 600;">28</div></div>
+          <div style="flex: 1; text-align: center; padding: 5px 2px; border-radius: 8px; background: #f0ebe7;"><div style="font-size: 7px; color: #b0a099;">S</div><div style="font-size: 8px; color: #92786a; font-weight: 600;">29</div></div>
+        </div>
+
+        <!-- Chore detail sheet open -->
+        <div style="background: #fff; border-radius: 16px; padding: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); border: 1px solid #f0ebe7;">
+          <div style="font-size: 11px; font-weight: 800; color: #1a1a1a; margin-bottom: 2px;">Sweep kitchen 🧹</div>
+          <div style="font-size: 8px; color: #b0a099; margin-bottom: 10px;">Due today · Recurring weekly</div>
+          <div style="font-size: 8px; font-weight: 700; color: #92786a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;">Who's done it this week</div>
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 16px; height: 16px; background: linear-gradient(135deg, #ff7c5c, #ffb347); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 7px; color: #fff; font-weight: 700;">Y</div>
+              <span style="font-size: 9px; color: #1a1a1a; flex: 1;">You</span>
+              <span style="font-size: 8px; color: #22c55e; font-weight: 700;">Done Mon ✓</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 16px; height: 16px; background: #f0ebe7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 7px; color: #92786a; font-weight: 700;">J</div>
+              <span style="font-size: 9px; color: #1a1a1a; flex: 1;">Jordan</span>
+              <span style="font-size: 8px; color: #b0a099;">Not yet</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 16px; height: 16px; background: #f0ebe7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 7px; color: #92786a; font-weight: 700;">A</div>
+              <span style="font-size: 9px; color: #1a1a1a; flex: 1;">Alex</span>
+              <span style="font-size: 8px; color: #b0a099;">Not yet</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Chore detail view</h3>
+      <p>Tap any chore to open a detail sheet showing who in the house has done it this week. No clutter on the main screen — progress is one tap away.</p>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,100 @@
+<h2>How should the app be structured?</h2>
+<p class="subtitle">Pick the navigation model that feels most natural for checking chores daily.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f172a; padding: 16px; font-family: system-ui;">
+      <!-- Phone mockup A -->
+      <div style="background: #1e293b; border-radius: 12px; padding: 12px; max-width: 180px; margin: 0 auto;">
+        <div style="color: #94a3b8; font-size: 9px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">Today's chores</div>
+        <div style="background: #334155; border-radius: 8px; padding: 8px; margin-bottom: 6px;">
+          <div style="color: #f8fafc; font-size: 10px;">🧹 Sweep kitchen</div>
+          <div style="color: #64748b; font-size: 8px; margin-top: 2px;">You · Due today</div>
+        </div>
+        <div style="background: #334155; border-radius: 8px; padding: 8px; margin-bottom: 6px;">
+          <div style="color: #f8fafc; font-size: 10px;">🗑️ Take out trash</div>
+          <div style="color: #64748b; font-size: 8px; margin-top: 2px;">Jordan · Due today</div>
+        </div>
+        <div style="background: #334155; border-radius: 8px; padding: 8px; margin-bottom: 12px;">
+          <div style="color: #f8fafc; font-size: 10px;">🚿 Clean bathroom</div>
+          <div style="color: #ef4444; font-size: 8px; margin-top: 2px;">Alex · Overdue</div>
+        </div>
+        <div style="display: flex; justify-content: space-around; border-top: 1px solid #334155; padding-top: 8px;">
+          <div style="text-align: center;">
+            <div style="font-size: 14px;">🏠</div>
+            <div style="color: #6366f1; font-size: 7px;">Chores</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 14px;">👥</div>
+            <div style="color: #64748b; font-size: 7px;">House</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Chore-First (Recommended)</h3>
+      <p>Home screen IS the chore list — filtered to today + overdue. 2-tab nav: Chores | House. Simple, no dashboard overhead.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f172a; padding: 16px; font-family: system-ui;">
+      <!-- Phone mockup B -->
+      <div style="background: #1e293b; border-radius: 12px; padding: 12px; max-width: 180px; margin: 0 auto;">
+        <div style="color: #94a3b8; font-size: 9px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Dashboard</div>
+        <div style="background: #6366f1; border-radius: 8px; padding: 8px; margin-bottom: 6px; text-align: center;">
+          <div style="color: #fff; font-size: 9px; font-weight: 600;">2 chores due today</div>
+          <div style="color: #c7d2fe; font-size: 8px;">1 overdue</div>
+        </div>
+        <div style="color: #94a3b8; font-size: 8px; margin-bottom: 4px;">Recent activity</div>
+        <div style="background: #334155; border-radius: 6px; padding: 6px; margin-bottom: 4px;">
+          <div style="color: #f8fafc; font-size: 8px;">Jordan swept the floor ✓</div>
+        </div>
+        <div style="background: #334155; border-radius: 6px; padding: 6px; margin-bottom: 12px;">
+          <div style="color: #f8fafc; font-size: 8px;">Sam took out trash ✓</div>
+        </div>
+        <div style="display: flex; justify-content: space-around; border-top: 1px solid #334155; padding-top: 8px;">
+          <div style="text-align: center;"><div style="font-size: 12px;">📊</div><div style="color: #6366f1; font-size: 7px;">Home</div></div>
+          <div style="text-align: center;"><div style="font-size: 12px;">✅</div><div style="color: #64748b; font-size: 7px;">Chores</div></div>
+          <div style="text-align: center;"><div style="font-size: 12px;">👥</div><div style="color: #64748b; font-size: 7px;">House</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Dashboard-First</h3>
+      <p>Home shows a summary card + activity feed. Separate tab for the chore list. 3-tab nav. Better for Phase 2 gamification but more to build now.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f172a; padding: 16px; font-family: system-ui;">
+      <!-- Phone mockup C -->
+      <div style="background: #1e293b; border-radius: 12px; padding: 12px; max-width: 180px; margin: 0 auto;">
+        <div style="color: #94a3b8; font-size: 9px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">By roommate</div>
+        <div style="display: flex; gap: 4px; margin-bottom: 8px;">
+          <div style="background: #6366f1; border-radius: 20px; padding: 3px 8px; color: #fff; font-size: 8px;">You</div>
+          <div style="background: #334155; border-radius: 20px; padding: 3px 8px; color: #94a3b8; font-size: 8px;">Jordan</div>
+          <div style="background: #334155; border-radius: 20px; padding: 3px 8px; color: #94a3b8; font-size: 8px;">Alex</div>
+        </div>
+        <div style="background: #334155; border-radius: 8px; padding: 8px; margin-bottom: 6px;">
+          <div style="color: #f8fafc; font-size: 10px;">🧹 Sweep kitchen</div>
+          <div style="color: #64748b; font-size: 8px; margin-top: 2px;">Due today</div>
+        </div>
+        <div style="background: #334155; border-radius: 8px; padding: 8px; margin-bottom: 12px;">
+          <div style="color: #f8fafc; font-size: 10px;">🛏️ Make your bed</div>
+          <div style="color: #64748b; font-size: 8px; margin-top: 2px;">Due Thu</div>
+        </div>
+        <div style="display: flex; justify-content: space-around; border-top: 1px solid #334155; padding-top: 8px;">
+          <div style="text-align: center;"><div style="font-size: 12px;">🏠</div><div style="color: #6366f1; font-size: 7px;">Chores</div></div>
+          <div style="text-align: center;"><div style="font-size: 12px;">👥</div><div style="color: #64748b; font-size: 7px;">House</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Person-Filtered</h3>
+      <p>Chore list filterable by roommate via tabs at the top. Default view is "You." Good for accountability but adds complexity.</p>
+    </div>
+  </div>
+
+</div>

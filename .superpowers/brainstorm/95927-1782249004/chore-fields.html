@@ -1,0 +1,40 @@
+<h2>What does a chore need?</h2>
+<p class="subtitle">When someone creates a chore, what information should they fill in? Less is more — every optional field adds friction. Select what's required, leave out what's noise.</p>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="name" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Name <span style="color: #22c55e; font-size: 0.75rem; font-weight: 600; margin-left: 6px;">REQUIRED</span></h3>
+      <p>"Vacuum living room", "Take out trash", "Clean bathroom"</p>
+    </div>
+  </div>
+  <div class="option" data-choice="assignee" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Assigned to</h3>
+      <p>Which roommate is responsible. Can be left unassigned (shared task).</p>
+    </div>
+  </div>
+  <div class="option" data-choice="due" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Due date</h3>
+      <p>When it needs to be done by. Enables due-today and overdue notifications.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="notes" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>Notes</h3>
+      <p>Optional context — "use the blue mop", "before Sunday dinner".</p>
+    </div>
+  </div>
+  <div class="option" data-choice="photo" onclick="toggleSelect(this)">
+    <div class="letter">E</div>
+    <div class="content">
+      <h3>Photo proof on completion</h3>
+      <p>Roommate must attach a photo to mark a chore done. Accountability layer.</p>
+    </div>
+  </div>
+</div>
