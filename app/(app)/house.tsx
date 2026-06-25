@@ -1,13 +1,50 @@
-import { View, Text, TouchableOpacity, StyleSheet, Alert, SafeAreaView, ScrollView, Linking } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Share, Linking, Modal, TextInput } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useState } from 'react'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useAuth } from '@/hooks/useAuth'
 import { useHouse } from '@/hooks/useHouse'
-import { MemberList } from '@/components/house/MemberList'
-import { InviteSection } from '@/components/house/InviteSection'
-import { Colors, Radii } from '@/constants/theme'
+import { Avatar } from '@/components/ui/Avatar'
+import { Colors, Fonts, Shadows, AvatarGradients, Radii } from '@/constants/theme'
+import { useUserAccent } from '@/context/UserAccentContext'
+
 
 export default function HouseScreen() {
-  const { session } = useAuth()
+  const { accentColor } = useUserAccent()
+  const { session, profile, updateProfile } = useAuth()
   const { house, members, leaveHouse } = useHouse(session?.user.id)
+  // Profile edit modal
+  const [editOpen, setEditOpen] = useState(false)
+  const [draftName, setDraftName] = useState('')
+  const [draftColor, setDraftColor] = useState(0)
+  const [saving, setSaving] = useState(false)
+
+  const isOwner = house?.created_by === session?.user.id
+
+  function openEditProfile() {
+    setDraftName(profile?.display_name ?? '')
+    setDraftColor(profile?.avatar_color_index ?? 0)
+    setEditOpen(true)
+  }
+
+  async function handleSaveProfile() {
+    if (!draftName.trim()) return
+    setSaving(true)
+    const { error, apply } = await updateProfile(
+      { display_name: draftName.trim(), avatar_color_index: draftColor },
+      { applyImmediately: false }
+    )
+    setSaving(false)
+    if (error) { Alert.alert('Error', error); return }
+    setEditOpen(false)
+    // Apply color state after modal slide-out animation (300ms) so there's no mid-animation flash
+    setTimeout(apply, 320)
+  }
+
+  async function handleShareCode() {
+    if (!house) return
+    await Share.share({ message: `Join my house on Tidy!\n\nCode: ${house.code}\nhttps://tidy.app/join/${house.code}` })
+  }
 
   async function handleLeave() {
     Alert.alert(
@@ -30,55 +67,305 @@ export default function HouseScreen() {
   if (!house) return null
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.headerTitle}>House</Text>
+          <Text style={styles.headerSub}>Settings</Text>
+        </View>
+        <View style={styles.greeting}>
+          <Text style={styles.greetSub}>Welcome back,</Text>
+          <Text style={styles.greetName}>{profile?.display_name?.split(' ')[0] ?? ''}</Text>
+        </View>
+      </View>
+
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.houseName}>{house.name}</Text>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Members</Text>
-          {members.length === 0 ? (
-            <Text style={styles.emptyText}>Invite your roommates to get started.</Text>
-          ) : (
-            <MemberList members={members} currentUserId={session?.user.id ?? ''} />
-          )}
+        {/* House info */}
+        <View style={styles.houseInfo}>
+          <Text style={styles.houseName}>{house.name}</Text>
+          <Text style={styles.houseSubtitle}>Your shared sanctuary</Text>
         </View>
 
-        <View style={styles.section}>
-          <InviteSection code={house.code} />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Notifications</Text>
-          <Text style={styles.notifHint}>
-            Enable reminders to get notified when chores are due.
-          </Text>
-          <TouchableOpacity
-            style={styles.settingsBtn}
-            onPress={() => Linking.openSettings()}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.settingsBtnText}>Open notification settings</Text>
+        {/* House Code Card */}
+        <View style={styles.card}>
+          <Text style={styles.codeLabel}>House Code</Text>
+          <View style={styles.codeRow}>
+            <Text style={styles.code}>{house.code}</Text>
+          </View>
+          <TouchableOpacity style={styles.shareBtn} onPress={handleShareCode} activeOpacity={0.8}>
+            <Text style={styles.shareBtnText}>Share Code</Text>
           </TouchableOpacity>
         </View>
 
+        {/* Members */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Roommates ({members.length})</Text>
+          <View style={styles.card}>
+            {members.map((m, idx) => {
+              if (!m.profile) return null
+              const isMe = m.user_id === session?.user.id
+              const isMemberOwner = house.created_by === m.user_id
+              const Row = isMe ? TouchableOpacity : View
+              return (
+                <Row
+                  key={m.user_id}
+                  style={[styles.memberRow, idx > 0 && styles.memberRowBorder]}
+                  {...(isMe ? { onPress: openEditProfile, activeOpacity: 0.7 } : {})}
+                >
+                  <Avatar
+                    uri={m.profile.avatar_url}
+                    displayName={m.profile.display_name}
+                    colorIndex={m.profile.avatar_color_index}
+                    size={44}
+                  />
+                  <View style={styles.memberInfo}>
+                    <Text style={styles.memberName}>
+                      {isMe ? `${m.profile.display_name} (you)` : m.profile.display_name}
+                    </Text>
+                    <Text style={styles.memberStatus}>
+                      {isMemberOwner ? 'Owner' : 'Member'}
+                    </Text>
+                  </View>
+                  {isMemberOwner && (
+                    <View style={styles.ownerBadge}>
+                      <Text style={styles.ownerBadgeText}>Owner</Text>
+                    </View>
+                  )}
+                  {isMe && (
+                    <Text style={styles.editHint}>Edit →</Text>
+                  )}
+                </Row>
+              )
+            })}
+            {members.length === 0 && (
+              <Text style={styles.emptyMembers}>Invite your roommates to get started.</Text>
+            )}
+          </View>
+        </View>
+
+        {/* Notification Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Notifications</Text>
+          <View style={styles.card}>
+            <Text style={styles.notifHint}>Manage chore notification preferences in your device settings.</Text>
+            <View style={styles.divider} />
+            <TouchableOpacity
+              style={styles.openSettingsRow}
+              onPress={() => Linking.openSettings()}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.openSettingsText}>Open notification settings →</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Leave House */}
         <TouchableOpacity style={styles.leaveBtn} onPress={handleLeave} activeOpacity={0.7}>
           <Text style={styles.leaveBtnText}>Leave house</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Edit Profile Modal */}
+      <Modal visible={editOpen} transparent animationType="slide" onRequestClose={() => setEditOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Edit your profile</Text>
+
+            {/* Name */}
+            <Text style={styles.modalLabel}>Display name</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={draftName}
+              onChangeText={setDraftName}
+              placeholder="Your name"
+              placeholderTextColor={Colors.onSurfaceVariant}
+              autoCapitalize="words"
+              returnKeyType="done"
+            />
+
+            {/* Color Picker */}
+            <Text style={styles.modalLabel}>Your color</Text>
+            <View style={styles.colorGrid}>
+              {AvatarGradients.map(([start, end], idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  onPress={() => setDraftColor(idx)}
+                  activeOpacity={0.8}
+                  style={styles.colorSwatch}
+                >
+                  <LinearGradient
+                    colors={[start, end]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[styles.colorSwatchGrad, draftColor === idx && styles.colorSwatchSelected]}
+                  />
+                  {draftColor === idx && <Text style={styles.colorCheck}>✓</Text>}
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Preview */}
+            <View style={styles.previewRow}>
+              <LinearGradient
+                colors={AvatarGradients[draftColor % AvatarGradients.length]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.previewAvatar}
+              >
+                <Text style={styles.previewInitial}>
+                  {(draftName.trim() || 'Y')[0].toUpperCase()}
+                </Text>
+              </LinearGradient>
+              <Text style={[styles.previewName, { color: AvatarGradients[draftColor % AvatarGradients.length][0] }]}>
+                {draftName.trim() || 'Your name'}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.saveBtn, { backgroundColor: accentColor }, (!draftName.trim() || saving) && { opacity: 0.4 }]}
+              onPress={handleSaveProfile}
+              disabled={!draftName.trim() || saving}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save changes'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setEditOpen(false)} style={styles.cancelBtn}>
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  content: { padding: 20, gap: 16, paddingBottom: 120 },
-  houseName: { fontSize: 24, fontWeight: '800', color: Colors.textPrimary, marginBottom: 4 },
-  section: { backgroundColor: Colors.cardBackground, borderRadius: 16, padding: 16, gap: 12 },
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.7 },
-  emptyText: { fontSize: 14, color: Colors.textSecondary },
-  notifHint: { fontSize: 13, color: Colors.textSecondary, lineHeight: 18 },
-  settingsBtn: { backgroundColor: Colors.mutedSurface, borderRadius: Radii.pill, paddingVertical: 10, alignItems: 'center' },
-  settingsBtnText: { fontSize: 14, color: Colors.textPrimary, fontWeight: '600' },
-  leaveBtn: { paddingVertical: 12, alignItems: 'center' },
-  leaveBtnText: { fontSize: 15, color: Colors.overdue, fontWeight: '600' },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.surfaceContainerHigh,
+    ...Shadows.card,
+  },
+  headerTitle: { fontSize: 18, fontFamily: Fonts.bold, color: Colors.primary },
+  headerSub: { fontSize: 12, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
+  greeting: { alignItems: 'flex-end' },
+  greetSub: { fontSize: 11, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
+  greetName: { fontSize: 14, fontFamily: Fonts.bold, color: Colors.onSurface },
+  content: { padding: 20, gap: 24, paddingBottom: 100 },
+
+  houseInfo: { alignItems: 'center', gap: 4 },
+  houseName: { fontSize: 26, fontFamily: Fonts.bold, color: Colors.onSurface, textAlign: 'center' },
+  houseSubtitle: { fontSize: 14, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
+
+  card: {
+    backgroundColor: Colors.surfaceContainerLowest,
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: Colors.surfaceContainerHigh,
+    ...Shadows.card,
+  },
+
+  codeLabel: { fontSize: 11, fontFamily: Fonts.bold, color: Colors.outline, textTransform: 'uppercase', letterSpacing: 1, textAlign: 'center', marginBottom: 8 },
+  codeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: Colors.surfaceContainerLow,
+    borderRadius: 999,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: Colors.outlineVariant,
+    marginBottom: 14,
+  },
+  code: { fontSize: 24, fontFamily: Fonts.bold, color: Colors.primary, letterSpacing: 3 },
+  shareBtn: {
+    backgroundColor: Colors.primary,
+    borderRadius: 999,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  shareBtnText: { fontSize: 14, fontFamily: Fonts.bold, color: '#fff' },
+
+
+  section: { gap: 12 },
+  sectionTitle: { fontSize: 18, fontFamily: Fonts.bold, color: Colors.onSurface },
+
+  memberRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 12 },
+  memberRowBorder: { borderTopWidth: 1, borderTopColor: Colors.surfaceContainerHigh },
+  memberInfo: { flex: 1 },
+  memberName: { fontSize: 15, fontFamily: Fonts.semibold, color: Colors.onSurface },
+  memberStatus: { fontSize: 12, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
+  ownerBadge: {
+    backgroundColor: Colors.primaryFixed,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  ownerBadgeText: { fontSize: 11, fontFamily: Fonts.bold, color: Colors.primary },
+
+  editHint: { fontSize: 12, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
+  emptyMembers: { fontSize: 14, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
+
+  // Profile edit modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  modalSheet: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 24,
+    paddingBottom: 48,
+    gap: 4,
+  },
+  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: Colors.outlineVariant, alignSelf: 'center', marginBottom: 16 },
+  modalTitle: { fontSize: 20, fontFamily: Fonts.bold, color: Colors.onSurface, marginBottom: 16 },
+  modalLabel: { fontSize: 12, fontFamily: Fonts.bold, color: Colors.outline, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 12, marginBottom: 6 },
+  modalInput: {
+    backgroundColor: Colors.surfaceContainerLow,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    fontSize: 16,
+    fontFamily: Fonts.semibold,
+    color: Colors.onSurface,
+    borderWidth: 1,
+    borderColor: Colors.outlineVariant,
+  },
+  colorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 4 },
+  colorSwatch: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  colorSwatchGrad: { width: 44, height: 44, borderRadius: 22, position: 'absolute' },
+  colorSwatchSelected: { width: 48, height: 48, borderRadius: 24, borderWidth: 3, borderColor: Colors.onSurface },
+  colorCheck: { fontSize: 18, color: '#fff', fontFamily: Fonts.bold },
+  previewRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16, marginBottom: 4 },
+  previewAvatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  previewInitial: { fontSize: 18, fontFamily: Fonts.bold, color: '#fff' },
+  previewName: { fontSize: 18, fontFamily: Fonts.bold },
+  saveBtn: {
+    backgroundColor: Colors.primary,
+    borderRadius: 999,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  saveBtnText: { fontSize: 15, fontFamily: Fonts.bold, color: '#fff' },
+  cancelBtn: { paddingVertical: 12, alignItems: 'center' },
+  cancelBtnText: { fontSize: 14, fontFamily: Fonts.semibold, color: Colors.onSurfaceVariant },
+
+  notifHint: { fontSize: 13, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant, paddingVertical: 4 },
+  divider: { height: 1, backgroundColor: Colors.surfaceContainerHigh, marginVertical: 4 },
+  openSettingsRow: { paddingTop: 8, alignItems: 'center' },
+  openSettingsText: { fontSize: 13, fontFamily: Fonts.semibold, color: Colors.primary },
+
+  leaveBtn: { paddingVertical: 16, alignItems: 'center' },
+  leaveBtnText: { fontSize: 15, fontFamily: Fonts.semibold, color: Colors.error },
 })

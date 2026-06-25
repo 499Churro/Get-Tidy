@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
-import { AvatarGradients, Colors, PrimaryGradient, Radii, Shadows } from '@/constants/theme'
+import { Colors, Fonts, Radii, Shadows } from '@/constants/theme'
 import { ChoreWithCompletion, Profile } from '@/types/database'
+import { useUserAccent } from '@/context/UserAccentContext'
 
 interface HeroCardProps {
   chore: ChoreWithCompletion | null
@@ -11,22 +11,20 @@ interface HeroCardProps {
   onMarkDone: () => void
 }
 
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00Z')
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
+function hoursUntil(dateStr: string): number | null {
+  const due = new Date(dateStr + 'T23:59:00')
+  const now = new Date()
+  const diff = (due.getTime() - now.getTime()) / (1000 * 60 * 60)
+  return Math.round(diff)
 }
 
 export function HeroCard({ chore, allDone, viewingProfile, isSelf, onMarkDone }: HeroCardProps) {
-  const gradColors: [string, string] = viewingProfile
-    ? [...AvatarGradients[viewingProfile.avatar_color_index % AvatarGradients.length]] as [string, string]
-    : [Colors.gradientStart, Colors.gradientEnd]
+  const { accentColor } = useUserAccent()
+  const name = viewingProfile ? viewingProfile.display_name.split(' ')[0] : 'you'
 
-  const name = viewingProfile ? viewingProfile.display_name.split(' ')[0] : 'You'
-
-  // All done or empty state
   if (allDone || !chore) {
     return (
-      <View style={[styles.card, styles.emptyCard]}>
+      <View style={styles.emptyCard}>
         <Text style={styles.emptyText}>
           {allDone ? 'All done for today! ✦' : `${name} has nothing today.`}
         </Text>
@@ -34,73 +32,120 @@ export function HeroCard({ chore, allDone, viewingProfile, isSelf, onMarkDone }:
     )
   }
 
+  const assigneeName = chore.assigned_profile
+    ? chore.assigned_profile.display_name.split(' ')[0]
+    : 'Anyone'
+
+  const _d = new Date()
+  const today = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}-${String(_d.getDate()).padStart(2, '0')}`
+  const isOverdue = !!chore.due_date && chore.due_date < today
+  const hours = chore.due_date ? hoursUntil(chore.due_date) : null
+
   return (
-    <LinearGradient
-      colors={gradColors}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.card}
-    >
-      <View style={styles.decCircle} />
-      <Text style={styles.eyebrow}>
-        {isSelf ? 'Your chore' : `${name}'s chore`} · {chore.frequency}
-      </Text>
-      <Text style={styles.choreName} numberOfLines={2}>{chore.name}</Text>
-      {chore.due_date && (
-        <Text style={styles.dueDate}>Due {formatDate(chore.due_date)}</Text>
-      )}
-      {isSelf ? (
-        <TouchableOpacity style={styles.ctaBtn} onPress={onMarkDone} activeOpacity={0.8}>
-          <Text style={styles.ctaText}>Mark as done ✓</Text>
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.ctaBtn}>
-          <Text style={styles.ctaText}>Not done yet</Text>
+    <View style={styles.card}>
+      <View style={[styles.leftStripe, { backgroundColor: accentColor }]} />
+      <View style={styles.inner}>
+        <View style={styles.topRow}>
+          <View style={styles.titleBlock}>
+            <Text style={[styles.eyebrow, { color: accentColor }]}>Priority Chore</Text>
+            <Text style={styles.choreName} numberOfLines={2}>{chore.name}</Text>
+            <View style={styles.assigneeRow}>
+              <View style={[styles.assigneeInitial, { backgroundColor: accentColor + '22' }]}>
+                <Text style={[styles.assigneeInitialText, { color: accentColor }]}>{assigneeName[0]}</Text>
+              </View>
+              <Text style={styles.assigneeLabel}>
+                {chore.assigned_to ? `Assigned to ${assigneeName}` : 'Unassigned'}
+              </Text>
+            </View>
+          </View>
+          {isSelf && (
+            <TouchableOpacity style={[styles.checkBtn, { backgroundColor: accentColor + '18', borderColor: accentColor + '44' }]} onPress={onMarkDone} activeOpacity={0.7}>
+              <Text style={[styles.checkIcon, { color: accentColor }]}>✓</Text>
+            </TouchableOpacity>
+          )}
         </View>
-      )}
-    </LinearGradient>
+        {(isOverdue || hours !== null) && (
+          <View style={styles.dueRow}>
+            <Text style={styles.clockIcon}>⏱</Text>
+            <Text style={[styles.dueText, isOverdue && styles.dueTextOverdue]}>
+              {isOverdue
+                ? 'Overdue'
+                : hours !== null && hours <= 24
+                ? `Due in ${hours}h`
+                : chore.due_date ?? ''}
+            </Text>
+          </View>
+        )}
+      </View>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: Radii.hero,
-    padding: 16,
-    minHeight: 120,
-    justifyContent: 'flex-end',
+    backgroundColor: Colors.surfaceContainerLowest,
+    borderRadius: Radii.card,
+    borderWidth: 1,
+    borderColor: Colors.surfaceContainerHigh,
+    flexDirection: 'row',
     overflow: 'hidden',
     ...Shadows.card,
   },
-  emptyCard: {
-    backgroundColor: Colors.mutedSurface,
+  leftStripe: {
+    width: 6,
+  },
+  inner: {
+    flex: 1,
+    padding: 20,
+    gap: 12,
+  },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  titleBlock: { flex: 1, gap: 6 },
+  eyebrow: {
+    fontSize: 11,
+    fontFamily: Fonts.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  choreName: {
+    fontSize: 20,
+    fontFamily: Fonts.bold,
+    color: Colors.onSurface,
+  },
+  assigneeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  assigneeInitial: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  decCircle: {
-    position: 'absolute',
-    right: -14,
-    top: -14,
-    width: 70,
-    height: 70,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 35,
+  assigneeInitialText: { fontSize: 10, fontFamily: Fonts.bold },
+  assigneeLabel: { fontSize: 13, fontFamily: Fonts.semibold, color: Colors.onSurfaceVariant },
+  checkBtn: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  eyebrow: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.75)',
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    marginBottom: 4,
+  checkIcon: { fontSize: 22, fontFamily: Fonts.bold },
+  dueRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  clockIcon: { fontSize: 12, color: Colors.error },
+  dueText: { fontSize: 12, fontFamily: Fonts.bold, color: Colors.onSurfaceVariant },
+  dueTextOverdue: { color: Colors.error },
+  emptyCard: {
+    backgroundColor: Colors.surfaceContainerLow,
+    borderRadius: Radii.card,
+    paddingVertical: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  choreName: { fontSize: 18, fontWeight: '800', color: '#fff', marginBottom: 2 },
-  dueDate: { fontSize: 10, color: 'rgba(255,255,255,0.7)', marginBottom: 10 },
-  ctaBtn: {
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    borderRadius: Radii.pill,
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    alignSelf: 'flex-start',
-  },
-  ctaText: { fontSize: 11, color: '#fff', fontWeight: '700' },
-  emptyText: { fontSize: 15, fontWeight: '700', color: Colors.textSecondary },
+  emptyText: { fontSize: 15, fontFamily: Fonts.semibold, color: Colors.onSurfaceVariant },
 })

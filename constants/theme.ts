@@ -1,30 +1,59 @@
 import { LinearGradientPoint } from 'expo-linear-gradient'
 
 export const Colors = {
-  background: '#fff8f4',
-  gradientStart: '#ff7c5c',
-  gradientEnd: '#ffb347',
-  overdue: '#ef4444',
-  complete: '#22c55e',
-  textPrimary: '#1a1a1a',
-  textSecondary: '#92786a',
+  background: '#fdf9f5',
+  surface: '#fdf9f5',
+  surfaceContainer: '#f1ede9',
+  surfaceContainerLow: '#f7f3ef',
+  surfaceContainerHigh: '#ebe7e4',
+  surfaceContainerLowest: '#ffffff',
+
+  primary: '#ae2f34',
+  primaryContainer: '#ff6b6b',
+  primaryFixed: '#ffdad8',
+  onPrimary: '#ffffff',
+  onPrimaryContainer: '#6d0010',
+
+  secondary: '#825500',
+  secondaryContainer: '#fdb64b',
+  onSecondaryContainer: '#704800',
+
+  tertiary: '#006a65',
+  tertiaryContainer: '#1eada5',
+  onTertiary: '#ffffff',
+
+  error: '#ba1a1a',
+  errorContainer: '#ffdad6',
+
+  onSurface: '#1c1c19',
+  onSurfaceVariant: '#584140',
+  outline: '#8c706f',
+  outlineVariant: '#e0bfbd',
+
+  // Legacy aliases so older screens don't break
+  gradientStart: '#ae2f34',
+  gradientEnd: '#fdb64b',
+  textPrimary: '#1c1c19',
+  textSecondary: '#584140',
   cardBackground: '#ffffff',
-  mutedSurface: '#f0ebe7',
-  orange: '#fb923c',
-  yellow: '#fde047',
+  mutedSurface: '#f1ede9',
+  overdue: '#ba1a1a',
+  complete: '#1eada5',
+  orange: '#fdb64b',
+  yellow: '#fdb64b',
 } as const
 
 export const PrimaryGradient = {
-  colors: [Colors.gradientStart, Colors.gradientEnd] as const,
+  colors: ['#ae2f34', '#fdb64b'] as const,
   start: { x: 0, y: 0 } as LinearGradientPoint,
   end: { x: 1, y: 1 } as LinearGradientPoint,
 }
 
 export const AvatarGradients = [
-  ['#ff7c5c', '#ffb347'],
-  ['#a8d8a8', '#5a9e5a'],
+  ['#ae2f34', '#fdb64b'],
+  ['#5dd9d0', '#006a65'],
   ['#b8a9e0', '#7c6abf'],
-  ['#fbd38d', '#e8961e'],
+  ['#fdb64b', '#825500'],
   ['#93c5fd', '#3b82f6'],
   ['#f9a8d4', '#ec4899'],
   ['#5eead4', '#0d9488'],
@@ -32,35 +61,36 @@ export const AvatarGradients = [
 ] as const
 
 export const Radii = {
-  card: 14,
-  pill: 20,
-  logo: 9,
-  nav: 18,
-  hero: 18,
+  card: 24,
+  pill: 999,
+  logo: 10,
+  nav: 20,
+  hero: 24,
   avatar: 999,
 } as const
 
 export const Fonts = {
-  regular: 'DMSans_400Regular',
-  medium: 'DMSans_500Medium',
-  semibold: 'DMSans_600SemiBold',
-  bold: 'DMSans_700Bold',
-  extrabold: 'DMSans_800ExtraBold',
+  light: 'Quicksand_300Light',
+  regular: 'Quicksand_400Regular',
+  medium: 'Quicksand_500Medium',
+  semibold: 'Quicksand_600SemiBold',
+  bold: 'Quicksand_700Bold',
+  extrabold: 'Quicksand_700Bold',
 } as const
 
 export const Shadows = {
   card: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 20,
     elevation: 2,
   },
   nav: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 20,
     elevation: 4,
   },
 } as const

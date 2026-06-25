@@ -1,31 +1,25 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet } from 'react-native'
 import { ChoreCard } from './ChoreCard'
 import { ChoreWithCompletion } from '@/types/database'
-import { Colors } from '@/constants/theme'
+import { Colors, Fonts } from '@/constants/theme'
 
 interface ChoreListProps {
   chores: ChoreWithCompletion[]
   currentUserId: string
   onToggle: (chore: ChoreWithCompletion) => void
-  onAdd: () => void
+  onEdit: (chore: ChoreWithCompletion) => void
+  onDelete: (choreId: string) => void
+  onTakeOver: (choreId: string) => void
   emptyMessage: string
 }
 
-export function ChoreList({ chores, currentUserId, onToggle, onAdd, emptyMessage }: ChoreListProps) {
+export function ChoreList({ chores, currentUserId, onToggle, onEdit, onDelete, onTakeOver, emptyMessage }: ChoreListProps) {
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.sectionLabel}>Chores</Text>
-        <TouchableOpacity onPress={onAdd} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Text style={styles.addBtn}>+ Add</Text>
-        </TouchableOpacity>
-      </View>
+      <Text style={styles.sectionTitle}>Today's Tasks</Text>
       {chores.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyText}>{emptyMessage}</Text>
-          <TouchableOpacity onPress={onAdd} style={styles.emptyAddBtn}>
-            <Text style={styles.emptyAddBtnText}>+ Add chore</Text>
-          </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.list}>
@@ -33,8 +27,11 @@ export function ChoreList({ chores, currentUserId, onToggle, onAdd, emptyMessage
             <ChoreCard
               key={chore.id}
               chore={chore}
-              canToggle={chore.assigned_to === currentUserId}
+              currentUserId={currentUserId}
               onToggle={() => onToggle(chore)}
+              onEdit={() => onEdit(chore)}
+              onDelete={() => onDelete(chore.id)}
+              onTakeOver={() => onTakeOver(chore.id)}
             />
           ))}
         </View>
@@ -44,13 +41,9 @@ export function ChoreList({ chores, currentUserId, onToggle, onAdd, emptyMessage
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: Colors.textPrimary, textTransform: 'uppercase', letterSpacing: 0.7 },
-  addBtn: { fontSize: 13, color: Colors.gradientStart, fontWeight: '600' },
-  empty: { alignItems: 'center', paddingVertical: 32, gap: 12 },
-  emptyText: { fontSize: 15, color: Colors.textSecondary, textAlign: 'center', paddingHorizontal: 16 },
-  emptyAddBtn: { backgroundColor: Colors.mutedSurface, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
-  emptyAddBtnText: { fontSize: 13, color: Colors.textPrimary, fontWeight: '600' },
-  list: { gap: 6 },
+  container: { gap: 12 },
+  sectionTitle: { fontSize: 22, fontFamily: Fonts.bold, color: Colors.onSurface, paddingHorizontal: 4 },
+  empty: { alignItems: 'center', paddingVertical: 32 },
+  emptyText: { fontSize: 15, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant, textAlign: 'center', paddingHorizontal: 16 },
+  list: { gap: 10 },
 })

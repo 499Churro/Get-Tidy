@@ -1,16 +1,15 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
-import { LinearGradient } from 'expo-linear-gradient'
-import { Colors, PrimaryGradient, Radii } from '@/constants/theme'
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { Colors, Fonts } from '@/constants/theme'
 import { getMondayOfWeek } from '@/lib/chores'
 
-const DOT_COLORS = {
-  red: Colors.overdue,
-  orange: Colors.orange,
-  yellow: Colors.yellow,
-  green: Colors.complete,
-} as const
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+const DOT_COLORS = {
+  red: Colors.error,
+  orange: Colors.secondaryContainer,
+  yellow: Colors.secondaryContainer,
+  green: Colors.tertiaryContainer,
+} as const
 
 interface WeekStripProps {
   selectedDate: string
@@ -27,7 +26,11 @@ export function WeekStrip({ selectedDate, onSelectDate, dotColors }: WeekStripPr
   })
 
   return (
-    <View style={styles.row}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.row}
+    >
       {days.map((date, i) => {
         const isSelected = date === selectedDate
         const dotColor = dotColors[date]
@@ -38,41 +41,78 @@ export function WeekStrip({ selectedDate, onSelectDate, dotColors }: WeekStripPr
             key={date}
             testID="week-day"
             onPress={() => onSelectDate(date)}
-            style={styles.dayWrapper}
+            style={styles.col}
             activeOpacity={0.7}
           >
+            <Text style={[styles.dayLabel, isSelected && styles.dayLabelActive]}>
+              {DAY_LABELS[i]}
+            </Text>
             {isSelected ? (
-              <LinearGradient {...PrimaryGradient} style={styles.dayCell}>
-                <Text style={[styles.label, styles.labelSelected]}>{DAY_LABELS[i]}</Text>
-                <Text style={[styles.num, styles.numSelected]}>{dayNum}</Text>
+              <View style={[styles.card, styles.cardActive]}>
+                <Text style={styles.numActive}>{dayNum}</Text>
                 {dotColor && (
-                  <View style={[styles.dot, { backgroundColor: DOT_COLORS[dotColor] }]} />
+                  <View style={styles.dotRow}>
+                    <View style={[styles.dot, { backgroundColor: DOT_COLORS[dotColor] }]} />
+                  </View>
                 )}
-              </LinearGradient>
+              </View>
             ) : (
-              <View style={[styles.dayCell, styles.dayCellInactive]}>
-                <Text style={styles.label}>{DAY_LABELS[i]}</Text>
+              <View style={[styles.card, styles.cardInactive]}>
                 <Text style={styles.num}>{dayNum}</Text>
                 {dotColor && (
-                  <View style={[styles.dot, { backgroundColor: DOT_COLORS[dotColor] }]} />
+                  <View style={styles.dotRow}>
+                    <View style={[styles.dot, { backgroundColor: DOT_COLORS[dotColor] }]} />
+                  </View>
                 )}
               </View>
             )}
           </TouchableOpacity>
         )
       })}
-    </View>
+    </ScrollView>
   )
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 4 },
-  dayWrapper: { flex: 1 },
-  dayCell: { borderRadius: 11, paddingVertical: 7, paddingHorizontal: 2, alignItems: 'center', gap: 2 },
-  dayCellInactive: { backgroundColor: Colors.mutedSurface },
-  label: { fontSize: 9, fontWeight: '600', color: Colors.textSecondary },
-  labelSelected: { color: 'rgba(255,255,255,0.85)' },
-  num: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary },
-  numSelected: { color: '#fff' },
-  dot: { width: 7, height: 7, borderRadius: 4, marginTop: 2 },
+  row: { flexDirection: 'row', gap: 12, paddingVertical: 8, paddingHorizontal: 20 },
+  col: { alignItems: 'center', gap: 4, minWidth: 48 },
+  dayLabel: {
+    fontSize: 12,
+    fontFamily: Fonts.bold,
+    color: Colors.onSurfaceVariant,
+  },
+  dayLabelActive: {
+    color: Colors.onSurface,
+    fontFamily: Fonts.extrabold,
+  },
+  card: {
+    width: 48,
+    height: 56,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  cardActive: {
+    backgroundColor: '#DEDAD8',
+    borderWidth: 1,
+    borderColor: '#C8C4C2',
+  },
+  cardInactive: {
+    backgroundColor: Colors.surfaceContainer,
+    borderWidth: 1,
+    borderColor: Colors.outlineVariant,
+  },
+  num: {
+    fontSize: 18,
+    fontFamily: Fonts.semibold,
+    color: Colors.onSurface,
+  },
+  numActive: {
+    fontSize: 18,
+    fontFamily: Fonts.semibold,
+    color: Colors.onSurface,
+  },
+  dotRow: { flexDirection: 'row', gap: 3 },
+  dot: { width: 5, height: 5, borderRadius: 3 },
 })

@@ -12,6 +12,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.tidy.app",
+      "usesAppleSignIn": true,
       "associatedDomains": [
         "applinks:tidy.app"
       ]
@@ -41,13 +42,15 @@
     },
     "plugins": [
       "expo-router",
+      "expo-apple-authentication",
       [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png"
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

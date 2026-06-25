@@ -51,7 +51,7 @@ export default function OnboardingScreen() {
       }
     }
 
-    const { error } = await supabase.from('profiles').insert({
+    const { error } = await supabase.from('profiles').upsert({
       id: user.id,
       display_name: displayName.trim(),
       avatar_url,
@@ -74,11 +74,11 @@ export default function OnboardingScreen() {
           <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
         ) : (
           <LinearGradient colors={['#f0ebe7', '#e5dfd9']} style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarPlaceholderText}>{displayName ? initials : '+'}</Text>
+            <Text style={styles.avatarPlaceholderText}>{displayName ? initials : '📷'}</Text>
           </LinearGradient>
         )}
       </TouchableOpacity>
-      <Text style={styles.photoHint}>Tap to add photo</Text>
+      <Text style={styles.photoHint}>Add photo <Text style={styles.optional}>(optional)</Text></Text>
       <TextInput
         style={styles.input}
         placeholder="Your name"
@@ -103,6 +103,7 @@ const styles = StyleSheet.create({
   avatarPlaceholder: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center' },
   avatarPlaceholderText: { fontSize: 24, color: Colors.textSecondary, fontWeight: '600' },
   photoHint: { fontSize: 12, color: Colors.textSecondary, marginBottom: 24 },
+  optional: { color: Colors.mutedSurface },
   input: { width: '100%', height: 48, backgroundColor: Colors.cardBackground, borderRadius: Radii.card, paddingHorizontal: 16, fontSize: 16, borderWidth: 1, borderColor: Colors.mutedSurface, marginBottom: 16 },
   btn: { width: '100%', height: 48, backgroundColor: Colors.textPrimary, borderRadius: Radii.pill, alignItems: 'center', justifyContent: 'center' },
   btnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
