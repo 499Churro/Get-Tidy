@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { registerForPushNotifications } from '@/lib/notifications'
 import { House, HouseMember } from '@/types/database'
+import { createHouse as createHouseRecord, joinHouse as joinHouseRecord } from '@/lib/house'
+import { notifyHouseMembershipChanged, subscribeToHouseMembershipChanges } from '@/lib/house-events'
 
 export function useHouse(userId: string | undefined) {
   const [house, setHouse] = useState<House | null>(null)
@@ -32,41 +33,30 @@ export function useHouse(userId: string | undefined) {
   useEffect(() => {
     fetchHouse()
     if (!userId) return
+    const unsubscribeFromLocalChanges = subscribeToHouseMembershipChanges(fetchHouse)
+    const channelName = `house_members:${userId}:${Date.now()}`
     const channel = supabase
-      .channel(`house_members:${userId}`)
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'house_members' }, fetchHouse)
       .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      unsubscribeFromLocalChanges()
+      supabase.removeChannel(channel)
+    }
   }, [userId, fetchHouse])
 
   async function createHouse(name: string): Promise<{ error: string | null }> {
-    const code = generateCode()
-    const { data, error } = await supabase
-      .from('houses')
-      .insert({ name, created_by: userId, code })
-      .select()
-      .single()
-    if (error) return { error: error.message }
-    const { error: memberError } = await supabase
-      .from('house_members')
-      .insert({ house_id: data.id, user_id: userId })
-    if (userId) registerForPushNotifications(userId).catch(() => {})
-    return { error: memberError?.message ?? null }
+    if (!userId) return { error: 'You must be signed in to create a house.' }
+    const result = await createHouseRecord(userId, name)
+    if (!result.error) await fetchHouse()
+    return result
   }
 
   async function joinHouse(code: string): Promise<{ error: string | null }> {
-    const { data: foundHouse, error: findError } = await supabase
-      .from('houses')
-      .select('id')
-      .eq('code', code.toUpperCase())
-      .single()
-    if (findError || !foundHouse) return { error: 'House not found. Check your code and try again.' }
-    const { error } = await supabase
-      .from('house_members')
-      .insert({ house_id: foundHouse.id, user_id: userId })
-    if (error?.code === '23505') return { error: "You're already in a house. Leave your current house first." }
-    if (userId) registerForPushNotifications(userId).catch(() => {})
-    return { error: error?.message ?? null }
+    if (!userId) return { error: 'You must be signed in to join a house.' }
+    const result = await joinHouseRecord(userId, code)
+    if (!result.error) await fetchHouse()
+    return result
   }
 
   async function leaveHouse(): Promise<{ error: string | null }> {
@@ -78,13 +68,12 @@ export function useHouse(userId: string | undefined) {
         .eq('assigned_to', userId)
     }
     const { error } = await supabase.from('house_members').delete().eq('user_id', userId)
+    if (!error) {
+      notifyHouseMembershipChanged()
+      await fetchHouse()
+    }
     return { error: error?.message ?? null }
   }
 
   return { house, members, loading, createHouse, joinHouse, leaveHouse, refetch: fetchHouse }
-}
-
-function generateCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  return 'TIDY-' + Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
 }

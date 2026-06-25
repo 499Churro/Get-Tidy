@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { isChoreActiveOnDate } from '../_shared/is-chore-active.ts'
 
 serve(async () => {
   const supabase = createClient(
@@ -21,14 +22,16 @@ serve(async () => {
     if (localDate.getHours() !== 8) continue
 
     const todayLocal = nowUtc.toLocaleDateString('en-CA', { timeZone: profile.timezone })
+    const localDayOfWeek = localDate.getDay() // 0=Sun … 6=Sat
 
     const { data: chores } = await supabase
       .from('chores')
-      .select('id, name')
+      .select('id, name, frequency, due_date, days_of_week, created_at')
       .eq('assigned_to', profile.id)
-      .eq('due_date', todayLocal)
 
     for (const chore of chores ?? []) {
+      if (!isChoreActiveOnDate(chore, todayLocal, localDayOfWeek)) continue
+
       const { count } = await supabase
         .from('chore_completions')
         .select('*', { count: 'exact', head: true })

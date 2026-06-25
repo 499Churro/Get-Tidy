@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, createElement } from 'react'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Profile } from '@/types/database'
@@ -7,38 +7,65 @@ interface AuthState {
   session: Session | null
   profile: Profile | null
   loading: boolean
+  updateProfile: (updates: { display_name?: string; avatar_color_index?: number }, opts?: { applyImmediately?: boolean }) => Promise<{ error: string | null; apply: () => void }>
 }
 
-export function useAuth() {
-  const [state, setState] = useState<AuthState>({
-    session: null,
-    profile: null,
-    loading: true,
-  })
+const AuthContext = createContext<AuthState>({
+  session: null,
+  profile: null,
+  loading: true,
+  updateProfile: async () => ({ error: 'AuthProvider not mounted', apply: () => {} }),
+})
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) loadProfile(session)
-      else setState({ session: null, profile: null, loading: false })
-    })
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [loading, setLoading] = useState(true)
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session) await loadProfile(session)
-        else setState({ session: null, profile: null, loading: false })
-      }
-    )
-    return () => subscription.unsubscribe()
-  }, [])
-
-  async function loadProfile(session: Session) {
+  async function loadProfile(s: Session) {
     const { data } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', session.user.id)
+      .eq('id', s.user.id)
       .single()
-    setState({ session, profile: data, loading: false })
+    setProfile(data)
+    setLoading(false)
   }
 
-  return state
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s)
+      if (s) loadProfile(s)
+      else setLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
+      setSession(s)
+      if (s) await loadProfile(s)
+      else { setProfile(null); setLoading(false) }
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  async function updateProfile(
+    updates: { display_name?: string; avatar_color_index?: number },
+    { applyImmediately = true }: { applyImmediately?: boolean } = {}
+  ): Promise<{ error: string | null; apply: () => void }> {
+    if (!session) return { error: 'Not signed in.', apply: () => {} }
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', session.user.id)
+    const apply = () => {
+      if (!error) setProfile(prev => prev ? { ...prev, ...updates } : prev)
+    }
+    if (applyImmediately) apply()
+    return { error: error?.message ?? null, apply }
+  }
+
+  return createElement(AuthContext.Provider, { value: { session, profile, loading, updateProfile } }, children)
+}
+
+export function useAuth() {
+  return useContext(AuthContext)
 }

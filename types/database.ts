@@ -35,6 +35,7 @@ export interface Chore {
   due_date: string | null
   notes: string | null
   frequency: Frequency
+  days_of_week: number[] | null
   created_at: string
   assigned_profile?: Profile
 }

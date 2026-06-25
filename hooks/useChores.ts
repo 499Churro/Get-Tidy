@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Chore, ChoreCompletion, ChoreWithCompletion } from '@/types/database'
+import { Chore, ChoreCompletion, ChoreWithCompletion, Frequency } from '@/types/database'
 import { getChoresForDay, isChoreCompleteForDate, sortChores } from '@/lib/chores'
 
 export function useChores(houseId: string | undefined, selectedDate: string) {
@@ -32,7 +32,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
     fetchAll()
     if (!houseId) return
     const channel = supabase
-      .channel(`chores:${houseId}`)
+      .channel(`chores:${houseId}:${Date.now()}`)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'chores',
         filter: `house_id=eq.${houseId}`
@@ -99,7 +99,8 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
     assignedTo: string | null
     dueDate: string | null
     notes: string | null
-    frequency: 'daily' | 'weekly'
+    frequency: Frequency
+    daysOfWeek: number[] | null
     houseId: string
     createdBy: string
   }): Promise<{ error: string | null }> {
@@ -109,14 +110,42 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
       due_date: params.dueDate,
       notes: params.notes,
       frequency: params.frequency,
+      days_of_week: params.daysOfWeek,
       house_id: params.houseId,
       created_by: params.createdBy,
     })
+    if (!error) await fetchAll()
     return { error: error?.message ?? null }
   }
 
-  async function deleteChore(choreId: string): Promise<void> {
-    await supabase.from('chores').delete().eq('id', choreId)
+  async function updateChore(
+    choreId: string,
+    updates: {
+      name?: string
+      assignedTo?: string | null
+      dueDate?: string | null
+      notes?: string | null
+      frequency?: Frequency
+      daysOfWeek?: number[] | null
+    }
+  ): Promise<{ error: string | null }> {
+    const patch: Record<string, unknown> = {}
+    if (updates.name !== undefined) patch.name = updates.name
+    if (updates.assignedTo !== undefined) patch.assigned_to = updates.assignedTo
+    if (updates.dueDate !== undefined) patch.due_date = updates.dueDate
+    if (updates.notes !== undefined) patch.notes = updates.notes
+    if (updates.frequency !== undefined) patch.frequency = updates.frequency
+    if (updates.daysOfWeek !== undefined) patch.days_of_week = updates.daysOfWeek
+    const { error } = await supabase.from('chores').update(patch).eq('id', choreId)
+    if (!error) await fetchAll()
+    return { error: error?.message ?? null }
+  }
+
+  async function deleteChore(choreId: string): Promise<{ error: string | null }> {
+    await supabase.from('chore_completions').delete().eq('chore_id', choreId)
+    const { error } = await supabase.from('chores').delete().eq('id', choreId)
+    if (!error) await fetchAll()
+    return { error: error?.message ?? null }
   }
 
   return {
@@ -127,6 +156,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
     markDone,
     undoMarkDone,
     addChore,
+    updateChore,
     deleteChore,
     refetch: fetchAll,
   }

@@ -10,11 +10,13 @@ const baseChore: Chore = {
   due_date: null,
   notes: null,
   frequency: 'daily',
+  days_of_week: null,
   created_at: '2026-06-22T00:00:00Z',
 }
 
 const mondayDate = '2026-06-22' // Known Monday
 const tuesdayDate = '2026-06-23' // Known Tuesday
+const wednesdayDate = '2026-06-24' // Known Wednesday
 const sundayDate = '2026-06-28' // Known Sunday
 
 describe('getMondayOfWeek', () => {
@@ -60,22 +62,38 @@ describe('getChoresForDay', () => {
     expect(getChoresForDay(chores, mondayDate)).toHaveLength(1)
   })
 
-  it('returns weekly chore on its due_date day only', () => {
+  it('one-time chore (has due_date) appears only on that exact date', () => {
     const chores = [{ ...baseChore, frequency: 'weekly' as const, due_date: tuesdayDate }]
     expect(getChoresForDay(chores, tuesdayDate)).toHaveLength(1)
     expect(getChoresForDay(chores, mondayDate)).toHaveLength(0)
+    expect(getChoresForDay(chores, wednesdayDate)).toHaveLength(0)
   })
 
-  it('returns weekly chore with no due_date on Monday only', () => {
-    const chores = [{ ...baseChore, frequency: 'weekly' as const, due_date: null }]
+  it('returns empty for one-time chore on a non-matching day', () => {
+    const chores = [{ ...baseChore, frequency: 'weekly' as const, due_date: '2026-06-24' }]
+    expect(getChoresForDay(chores, mondayDate)).toHaveLength(0)
+  })
+
+  it('weekly chore with days_of_week [1,3] appears on Mon and Wed only', () => {
+    const chores = [{ ...baseChore, frequency: 'weekly' as const, days_of_week: [1, 3] }]
     expect(getChoresForDay(chores, mondayDate)).toHaveLength(1)
+    expect(getChoresForDay(chores, wednesdayDate)).toHaveLength(1)
     expect(getChoresForDay(chores, tuesdayDate)).toHaveLength(0)
     expect(getChoresForDay(chores, sundayDate)).toHaveLength(0)
   })
 
-  it('returns empty for weekly chore with due_date on a non-matching day', () => {
-    const chores = [{ ...baseChore, frequency: 'weekly' as const, due_date: '2026-06-24' }]
-    expect(getChoresForDay(chores, mondayDate)).toHaveLength(0)
+  it('weekly chore with days_of_week: null appears all week (legacy fallback)', () => {
+    const chores = [{ ...baseChore, frequency: 'weekly' as const, days_of_week: null }]
+    expect(getChoresForDay(chores, mondayDate)).toHaveLength(1)
+    expect(getChoresForDay(chores, tuesdayDate)).toHaveLength(1)
+    expect(getChoresForDay(chores, sundayDate)).toHaveLength(1)
+  })
+
+  it('chore does NOT appear before created_at date', () => {
+    const chores = [{ ...baseChore, frequency: 'daily' as const, created_at: '2026-06-25T00:00:00Z' }]
+    expect(getChoresForDay(chores, '2026-06-24')).toHaveLength(0)
+    expect(getChoresForDay(chores, '2026-06-25')).toHaveLength(1)
+    expect(getChoresForDay(chores, '2026-06-26')).toHaveLength(1)
   })
 })
 
@@ -121,7 +139,7 @@ describe('sortChores', () => {
     ]
     const completions: ChoreCompletion[] = [{ id: 'c1', chore_id: '2', completed_by: 'u1', completed_at: '', for_date: '2026-06-23' }]
     const sorted = sortChores(chores, completions, '2026-06-23')
-    expect(sorted[0].id).toBe('1') // incomplete first
-    expect(sorted[1].id).toBe('2') // complete last
+    expect(sorted[0].id).toBe('1')
+    expect(sorted[1].id).toBe('2')
   })
 })
