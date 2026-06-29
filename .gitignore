@@ -39,6 +39,9 @@ yarn-error.*
 # Claude Code agent worktrees
 .claude/worktrees/
 
+# Supabase CLI local state
+supabase/.temp/
+
 # generated native folders
 /ios
 /android
