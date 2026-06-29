@@ -3,6 +3,7 @@ import { View, ActivityIndicator } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useAuth } from '@/hooks/useAuth'
 import { Colors } from '@/constants/theme'
+import { setPendingInviteCode } from '@/lib/pendingInvite'
 
 export default function JoinDeepLink() {
   const { code } = useLocalSearchParams<{ code: string }>()
@@ -12,7 +13,16 @@ export default function JoinDeepLink() {
   useEffect(() => {
     if (loading) return
     if (!session) {
-      router.replace('/(auth)/sign-in')
+      if (code) {
+        // setPendingInviteCode is async (AsyncStorage); use inner IIFE so the
+        // effect callback stays synchronous and router.replace runs after the write.
+        ;(async () => {
+          await setPendingInviteCode(code)
+          router.replace('/(auth)/sign-in')
+        })()
+      } else {
+        router.replace('/(auth)/sign-in')
+      }
     } else {
       router.replace({ pathname: '/no-house', params: { code } })
     }

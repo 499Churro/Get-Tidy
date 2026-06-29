@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Chore, ChoreCompletion, ChoreWithCompletion, Frequency } from '@/types/database'
 import { getChoresForDay, isChoreCompleteForDate, sortChores } from '@/lib/chores'
@@ -7,6 +7,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
   const [chores, setChores] = useState<Chore[]>([])
   const [completions, setCompletions] = useState<ChoreCompletion[]>([])
   const [loading, setLoading] = useState(true)
+  const pendingRef = useRef<Set<string>>(new Set())
 
   const fetchAll = useCallback(async () => {
     if (!houseId) { setLoading(false); return }
@@ -60,9 +61,13 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
   }
 
   async function markDone(choreId: string, userId: string): Promise<void> {
-    // Optimistic update
+    // Shared key with undoMarkDone — blocks undo while insert is in flight and vice versa
+    const key = `${choreId}:${selectedDate}`
+    if (pendingRef.current.has(key)) return
+    pendingRef.current.add(key)
+
     const optimistic: ChoreCompletion = {
-      id: `optimistic-${choreId}-${selectedDate}`,
+      id: `optimistic-${key}`,
       chore_id: choreId,
       completed_by: userId,
       completed_at: new Date().toISOString(),
@@ -70,28 +75,55 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
     }
     setCompletions(prev => [...prev, optimistic])
 
-    const { error } = await supabase.from('chore_completions').insert({
-      chore_id: choreId,
-      completed_by: userId,
-      for_date: selectedDate,
-    })
+    let succeeded = false
+    try {
+      const result = await supabase.from('chore_completions').insert({
+        chore_id: choreId,
+        completed_by: userId,
+        for_date: selectedDate,
+      })
+      if (!result.error) succeeded = true
+    } catch {
+      // network/SDK throw — treat as failure, rollback below
+    } finally {
+      pendingRef.current.delete(key)
+    }
 
-    if (error) {
-      // Rollback
+    if (!succeeded) {
       setCompletions(prev => prev.filter(c => c.id !== optimistic.id))
     }
   }
 
   async function undoMarkDone(choreId: string): Promise<void> {
-    // Optimistic rollback
+    // Same key as markDone — blocks mark while delete is in flight and vice versa
+    const key = `${choreId}:${selectedDate}`
+    if (pendingRef.current.has(key)) return
+    pendingRef.current.add(key)
+
+    const snapshot = completions.filter(
+      c => c.chore_id === choreId && c.for_date === selectedDate
+    )
     setCompletions(prev =>
       prev.filter(c => !(c.chore_id === choreId && c.for_date === selectedDate))
     )
-    await supabase
-      .from('chore_completions')
-      .delete()
-      .eq('chore_id', choreId)
-      .eq('for_date', selectedDate)
+
+    let succeeded = false
+    try {
+      const result = await supabase
+        .from('chore_completions')
+        .delete()
+        .eq('chore_id', choreId)
+        .eq('for_date', selectedDate)
+      if (!result.error) succeeded = true
+    } catch {
+      // network/SDK throw — restore snapshot below
+    } finally {
+      pendingRef.current.delete(key)
+    }
+
+    if (!succeeded) {
+      setCompletions(prev => [...prev, ...snapshot])
+    }
   }
 
   async function addChore(params: {
@@ -142,7 +174,6 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
   }
 
   async function deleteChore(choreId: string): Promise<{ error: string | null }> {
-    await supabase.from('chore_completions').delete().eq('chore_id', choreId)
     const { error } = await supabase.from('chores').delete().eq('id', choreId)
     if (!error) await fetchAll()
     return { error: error?.message ?? null }

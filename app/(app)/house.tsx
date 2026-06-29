@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Share, Linking, Modal, TextInput } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Share, Linking, Modal, TextInput, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useState } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -12,7 +12,7 @@ import { useUserAccent } from '@/context/UserAccentContext'
 export default function HouseScreen() {
   const { accentColor } = useUserAccent()
   const { session, profile, updateProfile } = useAuth()
-  const { house, members, leaveHouse } = useHouse(session?.user.id)
+  const { house, members, loading: houseLoading, leaveHouse } = useHouse(session?.user.id)
   // Profile edit modal
   const [editOpen, setEditOpen] = useState(false)
   const [draftName, setDraftName] = useState('')
@@ -64,6 +64,7 @@ export default function HouseScreen() {
     )
   }
 
+  if (houseLoading) return <ActivityIndicator style={{ flex: 1 }} color={Colors.primary} />
   if (!house) return null
 
   return (
@@ -76,7 +77,7 @@ export default function HouseScreen() {
         </View>
         <View style={styles.greeting}>
           <Text style={styles.greetSub}>Welcome back,</Text>
-          <Text style={styles.greetName}>{profile?.display_name?.split(' ')[0] ?? ''}</Text>
+          <Text style={styles.greetName}>{profile?.display_name?.split(' ')[0] ?? 'there'}</Text>
         </View>
       </View>
 

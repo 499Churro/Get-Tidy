@@ -8,6 +8,7 @@ interface AuthState {
   profile: Profile | null
   loading: boolean
   updateProfile: (updates: { display_name?: string; avatar_color_index?: number }, opts?: { applyImmediately?: boolean }) => Promise<{ error: string | null; apply: () => void }>
+  refreshProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthState>({
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthState>({
   profile: null,
   loading: true,
   updateProfile: async () => ({ error: 'AuthProvider not mounted', apply: () => {} }),
+  refreshProfile: async () => {},
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -47,6 +49,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  async function refreshProfile(): Promise<void> {
+    const { data: { session: s } } = await supabase.auth.getSession()
+    if (s) await loadProfile(s)
+  }
+
   async function updateProfile(
     updates: { display_name?: string; avatar_color_index?: number },
     { applyImmediately = true }: { applyImmediately?: boolean } = {}
@@ -63,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null, apply }
   }
 
-  return createElement(AuthContext.Provider, { value: { session, profile, loading, updateProfile } }, children)
+  return createElement(AuthContext.Provider, { value: { session, profile, loading, updateProfile, refreshProfile } }, children)
 }
 
 export function useAuth() {

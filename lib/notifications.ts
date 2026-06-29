@@ -34,6 +34,13 @@ export async function registerForPushNotifications(userId: string): Promise<stri
   const { data: tokenData } = await Notifications.getExpoPushTokenAsync()
   const token = tokenData
 
-  await supabase.from('profiles').update({ push_token: token }).eq('id', userId)
+  const { error: saveError } = await supabase
+    .from('profiles')
+    .update({ push_token: token })
+    .eq('id', userId)
+  if (saveError) {
+    console.error('[notifications] Failed to save push token:', saveError.message)
+    return null
+  }
   return token
 }

@@ -20,13 +20,15 @@ function hoursUntil(dateStr: string): number | null {
 
 export function HeroCard({ chore, allDone, viewingProfile, isSelf, onMarkDone }: HeroCardProps) {
   const { accentColor } = useUserAccent()
-  const name = viewingProfile ? viewingProfile.display_name.split(' ')[0] : 'you'
+  const emptyMessage = viewingProfile
+    ? `${viewingProfile.display_name.split(' ')[0]} has nothing today.`
+    : 'You have nothing today.'
 
   if (allDone || !chore) {
     return (
       <View style={styles.emptyCard}>
         <Text style={styles.emptyText}>
-          {allDone ? 'All done for today! ✦' : `${name} has nothing today.`}
+          {allDone ? 'All done for today! ✦' : emptyMessage}
         </Text>
       </View>
     )

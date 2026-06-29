@@ -3,10 +3,12 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } fro
 import * as ImagePicker from 'expo-image-picker'
 import { getCalendars } from 'expo-localization'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
 import { AvatarGradients, Colors, Radii } from '@/constants/theme'
 import { LinearGradient } from 'expo-linear-gradient'
 
 export default function OnboardingScreen() {
+  const { refreshProfile } = useAuth()
   const [displayName, setDisplayName] = useState('')
   const [avatarUri, setAvatarUri] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -27,41 +29,52 @@ export default function OnboardingScreen() {
       return
     }
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setLoading(false); return }
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
-    const colorIndex = user.id.charCodeAt(0) % AvatarGradients.length
-    const timezone =
-      (getCalendars()[0]?.timeZone) ??
-      Intl.DateTimeFormat().resolvedOptions().timeZone ??
-      'UTC'
+      const colorIndex = user.id.charCodeAt(0) % AvatarGradients.length
+      const timezone =
+        getCalendars()[0]?.timeZone ??
+        Intl.DateTimeFormat().resolvedOptions().timeZone ??
+        'UTC'
 
-    let avatar_url: string | null = null
-    if (avatarUri) {
-      const ext = avatarUri.split('.').pop() ?? 'jpg'
-      const path = `${user.id}/avatar.${ext}`
-      const response = await fetch(avatarUri)
-      const blob = await response.blob()
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(path, blob, { upsert: true })
-      if (!uploadError) {
-        const { data } = supabase.storage.from('avatars').getPublicUrl(path)
-        avatar_url = data.publicUrl
+      let avatar_url: string | null = null
+      if (avatarUri) {
+        try {
+          const ext = avatarUri.split('.').pop() ?? 'jpg'
+          const path = `${user.id}/avatar.${ext}`
+          const response = await fetch(avatarUri)
+          const blob = await response.blob()
+          const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(path, blob, { upsert: true })
+          if (!uploadError) {
+            const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+            avatar_url = data.publicUrl
+          }
+        } catch {
+          // Avatar upload failed — proceed without photo rather than blocking onboarding
+        }
       }
+
+      const { error } = await supabase.from('profiles').upsert({
+        id: user.id,
+        display_name: displayName.trim(),
+        avatar_url,
+        avatar_color_index: colorIndex,
+        timezone,
+      })
+
+      if (error) { Alert.alert('Error', error.message); return }
+      // Refresh AuthProvider state so root layout re-evaluates routing immediately
+      await refreshProfile()
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Something went wrong.'
+      Alert.alert('Error', msg)
+    } finally {
+      setLoading(false)
     }
-
-    const { error } = await supabase.from('profiles').upsert({
-      id: user.id,
-      display_name: displayName.trim(),
-      avatar_url,
-      avatar_color_index: colorIndex,
-      timezone,
-    })
-
-    setLoading(false)
-    if (error) Alert.alert('Error', error.message)
-    // Root layout redirects to app once profile exists
   }
 
   const initials = displayName.trim().split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?'

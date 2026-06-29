@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
@@ -6,6 +6,7 @@ import { Colors, Fonts, Radii } from '@/constants/theme'
 import { useAuth } from '@/hooks/useAuth'
 import { createHouse, joinHouse } from '@/lib/house'
 import { supabase } from '@/lib/supabase'
+import { consumePendingInviteCode } from '@/lib/pendingInvite'
 
 export default function NoHouseScreen() {
   const { session } = useAuth()
@@ -16,6 +17,20 @@ export default function NoHouseScreen() {
   const [houseName, setHouseName] = useState('')
   const [code, setCode] = useState(prefillCode ?? '')
   const [loading, setLoading] = useState(false)
+
+  // On mount, check AsyncStorage for a pending invite code set before sign-in redirect.
+  // Route param takes precedence; cancelled guard avoids setState after unmount.
+  useEffect(() => {
+    if (prefillCode) return
+    let cancelled = false
+    consumePendingInviteCode().then(pending => {
+      if (pending && !cancelled) {
+        setCode(pending)
+        setTab('join')
+      }
+    })
+    return () => { cancelled = true }
+  }, [])
 
   async function handleSignOut() {
     await supabase.auth.signOut()

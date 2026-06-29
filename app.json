@@ -37,9 +37,6 @@
         }
       ]
     },
-    "web": {
-      "bundler": "metro"
-    },
     "plugins": [
       "expo-router",
       "expo-apple-authentication",

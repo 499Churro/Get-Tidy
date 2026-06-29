@@ -65,6 +65,16 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
     const [saving, setSaving] = useState(false)
     const [saveError, setSaveError] = useState<string | null>(null)
 
+    const resetForm = useCallback(() => {
+      setName('')
+      setNotes('')
+      setRepeatMode('weekly')
+      setDaysOfWeek([1])
+      setOneTimeDate(new Date())
+      setShowDatePicker(false)
+      setAssignedTo(currentUserId)
+    }, [currentUserId])
+
     useEffect(() => {
       if (editingChore) {
         setName(editingChore.name)
@@ -87,17 +97,7 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
       } else {
         resetForm()
       }
-    }, [editingChore])
-
-    const resetForm = useCallback(() => {
-      setName('')
-      setNotes('')
-      setRepeatMode('weekly')
-      setDaysOfWeek([1])
-      setOneTimeDate(new Date())
-      setShowDatePicker(false)
-      setAssignedTo(currentUserId)
-    }, [currentUserId])
+    }, [editingChore, resetForm])
 
     function toggleDay(day: number) {
       setDaysOfWeek(prev =>
@@ -118,22 +118,27 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
       const days = isOnce ? null : daysOfWeek
 
       let error: string | null = null
-      if (editingChore && onUpdate) {
-        const result = await onUpdate(editingChore.id, {
-          name: name.trim(), assignedTo, dueDate: dueDateStr,
-          notes: notes.trim() || null, frequency, daysOfWeek: days,
-        })
-        error = result.error
-      } else {
-        const result = await onAdd({
-          name: name.trim(), assignedTo, dueDate: dueDateStr,
-          notes: notes.trim() || null, frequency, daysOfWeek: days,
-          houseId, createdBy: currentUserId,
-        })
-        error = result.error
+      try {
+        if (editingChore && onUpdate) {
+          const result = await onUpdate(editingChore.id, {
+            name: name.trim(), assignedTo, dueDate: dueDateStr,
+            notes: notes.trim() || null, frequency, daysOfWeek: days,
+          })
+          error = result.error
+        } else {
+          const result = await onAdd({
+            name: name.trim(), assignedTo, dueDate: dueDateStr,
+            notes: notes.trim() || null, frequency, daysOfWeek: days,
+            houseId, createdBy: currentUserId,
+          })
+          error = result.error
+        }
+      } catch (e: unknown) {
+        error = e instanceof Error ? e.message : 'An unexpected error occurred.'
+      } finally {
+        setSaving(false)
       }
 
-      setSaving(false)
       if (error) {
         setSaveError(error)
       } else {

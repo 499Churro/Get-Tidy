@@ -51,7 +51,11 @@ export default function HomeScreen() {
   const viewingProfile = selectedUserId
     ? members.find(m => m.user_id === selectedUserId)?.profile ?? null
     : null
-  const isSelf = selectedUserId === null || selectedUserId === session?.user.id
+  // Hero card: only show mark-done button when chore belongs to current user or is unassigned
+  const heroIsActionable =
+    heroChore === null ||
+    heroChore.assigned_to === null ||
+    heroChore.assigned_to === session?.user.id
 
   function getCountForMember(userId: string) {
     const mc = getChoresForSelectedDay(userId)
@@ -79,7 +83,7 @@ export default function HomeScreen() {
         <TidyLogo />
         <View style={styles.greeting}>
           <Text style={styles.greetSub}>Welcome back,</Text>
-          <Text style={styles.greetName}>{profile?.display_name?.split(' ')[0] ?? ''}</Text>
+          <Text style={styles.greetName}>{profile?.display_name?.split(' ')[0] ?? 'there'}</Text>
         </View>
       </View>
 
@@ -116,7 +120,7 @@ export default function HomeScreen() {
           chore={heroChore}
           allDone={allDone}
           viewingProfile={viewingProfile}
-          isSelf={isSelf}
+          isSelf={heroIsActionable}
           onMarkDone={() => heroChore && handleToggle(heroChore)}
         />
 

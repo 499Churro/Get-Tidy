@@ -11,9 +11,14 @@ interface ChoreCardProps {
   onTakeOver: () => void
 }
 
+function localDateISO() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 export function ChoreCard({ chore, currentUserId, onToggle, onEdit, onDelete, onTakeOver }: ChoreCardProps) {
   const isDone = chore.completion !== null
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localDateISO()
   const isOverdue = !isDone && !!chore.due_date && chore.due_date < today
   const isUnassigned = !chore.assigned_to
   const isAssignedToMe = chore.assigned_to === currentUserId
