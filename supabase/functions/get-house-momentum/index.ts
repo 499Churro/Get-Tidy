@@ -48,6 +48,12 @@ serve(async (req) => {
 
   if (!memberCount) return new Response('Forbidden', { status: 403 })
 
+  const { data: membersData } = await admin
+    .from('house_members')
+    .select('user_id')
+    .eq('house_id', house_id)
+  const memberIds = new Set((membersData ?? []).map((m: { user_id: string }) => m.user_id))
+
   // ── 4. Compute month boundaries ───────────────────────────────────────────
   const monthStart = month.slice(0, 7) + '-01'
   const monthDate = new Date(monthStart + 'T00:00:00Z')
@@ -59,7 +65,7 @@ serve(async (req) => {
   // ── 5. Fetch chores active at any point in this month ─────────────────────
   const { data: chores } = await admin
     .from('chores')
-    .select('id, due_date, frequency, days_of_week, created_at, archived_at')
+    .select('id, due_date, frequency, days_of_week, created_at, archived_at, assigned_to')
     .eq('house_id', house_id)
     .or(`archived_at.is.null,archived_at.gte.${monthStart}`)
 
@@ -69,7 +75,7 @@ serve(async (req) => {
   if (chores.length === 0) {
     const { data: goal } = await admin
       .from('house_monthly_goals')
-      .select('reward_text, target_pct')
+      .select('reward_text, target_pct, goal_type, target_days')
       .eq('house_id', house_id)
       .eq('month', monthStart)
       .maybeSingle()
@@ -79,6 +85,9 @@ serve(async (req) => {
       momentum_pct: 0,
       reward_text: goal?.reward_text ?? null,
       target_pct: goal?.target_pct ?? 90,
+      active_days: 0,
+      target_days: goal?.target_days ?? 20,
+      goal_type: goal?.goal_type ?? 'days',
     }), { headers: { 'Content-Type': 'application/json' }, status: 200 })
   }
 
@@ -100,7 +109,7 @@ serve(async (req) => {
   // ── 8. Fetch completions in this month for this house ─────────────────────
   const { data: completions } = await admin
     .from('chore_completions')
-    .select('chore_id, for_date')
+    .select('chore_id, for_date, completed_by')
     .in('chore_id', [...choreIdSet])
     .gte('for_date', monthStart)
     .lte('for_date', evalEnd)
@@ -118,10 +127,33 @@ serve(async (req) => {
     }
   }
 
+  // ── 9b. Count active days ─────────────────────────────────────────────────
+  const completionsByDate = new Map<string, Set<string>>()
+  for (const comp of completions ?? []) {
+    if (!completionsByDate.has(comp.for_date)) completionsByDate.set(comp.for_date, new Set())
+    completionsByDate.get(comp.for_date)!.add(comp.completed_by)
+  }
+
+  let activeDays = 0
+  const allDays = daysInRange(monthStart, evalEnd)
+  for (const day of allDays) {
+    const dow = new Date(day + 'T00:00:00Z').getUTCDay()
+    const membersWithChores = new Set<string>()
+    for (const chore of chores) {
+      if (chore.assigned_to && memberIds.has(chore.assigned_to) && isChoreActiveOnDate(chore, day, dow)) {
+        membersWithChores.add(chore.assigned_to)
+      }
+    }
+    if (membersWithChores.size === 0) continue
+    const dayCompletions = completionsByDate.get(day) ?? new Set<string>()
+    const allDone = [...membersWithChores].every(uid => dayCompletions.has(uid))
+    if (allDone) activeDays++
+  }
+
   // ── 10. Fetch goal ────────────────────────────────────────────────────────
   const { data: goal } = await admin
     .from('house_monthly_goals')
-    .select('reward_text, target_pct')
+    .select('reward_text, target_pct, goal_type, target_days')
     .eq('house_id', house_id)
     .eq('month', monthStart)
     .maybeSingle()
@@ -136,6 +168,9 @@ serve(async (req) => {
     momentum_pct: momentumPct,
     reward_text: goal?.reward_text ?? null,
     target_pct: goal?.target_pct ?? 90,
+    active_days: activeDays,
+    target_days: goal?.target_days ?? 20,
+    goal_type: goal?.goal_type ?? 'days',
   }), {
     headers: { 'Content-Type': 'application/json' },
     status: 200,
