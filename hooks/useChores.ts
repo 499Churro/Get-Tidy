@@ -18,6 +18,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
       .from('chores')
       .select('*, assigned_profile:profiles!assigned_to(*)')
       .eq('house_id', houseId)
+      .is('archived_at', null)
 
     // Fetch all completions for chores in this house
     const choreIds = (choreData ?? []).map(c => c.id)
@@ -182,7 +183,10 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
   }
 
   async function deleteChore(choreId: string): Promise<{ error: string | null }> {
-    const { error } = await supabase.from('chores').delete().eq('id', choreId)
+    const { error } = await supabase
+      .from('chores')
+      .update({ archived_at: new Date().toISOString() })
+      .eq('id', choreId)
     if (!error) {
       cancelChoreNotifications(choreId).catch(() => {})
       await fetchAll()
