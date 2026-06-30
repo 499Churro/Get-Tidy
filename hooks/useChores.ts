@@ -100,7 +100,6 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
   }
 
   async function undoMarkDone(choreId: string): Promise<void> {
-    // Same key as markDone — blocks mark while delete is in flight and vice versa
     const key = `${choreId}:${selectedDate}`
     if (pendingRef.current.has(key)) return
     pendingRef.current.add(key)
@@ -112,22 +111,18 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
       prev.filter(c => !(c.chore_id === choreId && c.for_date === selectedDate))
     )
 
-    let succeeded = false
     try {
-      const result = await supabase
-        .from('chore_completions')
-        .delete()
-        .eq('chore_id', choreId)
-        .eq('for_date', selectedDate)
-      if (!result.error) succeeded = true
+      const { error } = await supabase.rpc('undo_chore_completion', {
+        p_chore_id: choreId,
+        p_for_date: selectedDate,
+      })
+      if (error) {
+        setCompletions(prev => [...prev, ...snapshot])
+      }
     } catch {
-      // network/SDK throw — restore snapshot below
+      setCompletions(prev => [...prev, ...snapshot])
     } finally {
       pendingRef.current.delete(key)
-    }
-
-    if (!succeeded) {
-      setCompletions(prev => [...prev, ...snapshot])
     }
   }
 
