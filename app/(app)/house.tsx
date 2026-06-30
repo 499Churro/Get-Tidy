@@ -17,15 +17,18 @@ import { HouseMomentum } from '@/types/database'
 
 
 function getRecapCopy(m: HouseMomentum): string {
-  if (m.momentum_pct >= m.target_pct) {
-    return m.reward_text ? `${m.reward_text} is still on track. Keep it up.` : 'On track. Keep it up.'
+  const remaining = m.target_days - m.active_days
+  if (m.active_days >= m.target_days) {
+    return m.reward_text ? `${m.reward_text} unlocked. Well done.` : 'Goal reached. Well done.'
   }
-  if (m.momentum_pct >= 70) {
-    return `Your house completed ${m.momentum_pct}% of chores on time this month.`
+  if (remaining <= 3) {
+    return m.reward_text
+      ? `So close — ${remaining} more day${remaining === 1 ? '' : 's'} to ${m.reward_text}.`
+      : `${remaining} more day${remaining === 1 ? '' : 's'} to go.`
   }
   return m.reward_text
-    ? `${m.reward_text} is still in reach — a strong finish gets you there.`
-    : 'A strong finish can still turn things around.'
+    ? `${m.active_days} days in. ${m.reward_text} is in reach.`
+    : `${m.active_days} days in this month.`
 }
 
 export default function HouseScreen() {
@@ -59,6 +62,7 @@ export default function HouseScreen() {
   const [saving, setSaving] = useState(false)
   const [goalDraft, setGoalDraft] = useState('')
   const [goalEditing, setGoalEditing] = useState(false)
+  const [targetDaysDraft, setTargetDaysDraft] = useState('20')
 
   const { momentum, loading: momentumLoading } = useHouseMomentum(house?.id)
   const { goal, setGoal: saveGoal } = useMonthlyGoal(house?.id)
@@ -196,13 +200,36 @@ export default function HouseScreen() {
                   autoCapitalize="sentences"
                   returnKeyType="done"
                   onSubmitEditing={() => {
-                    if (goalDraft.trim()) { void saveGoal(goalDraft.trim(), 90); setGoalDraft('') }
+                    if (goalDraft.trim()) {
+                      const days = Math.min(31, Math.max(1, parseInt(targetDaysDraft) || 20))
+                      void saveGoal(goalDraft.trim(), 90, days)
+                      setGoalDraft('')
+                      setTargetDaysDraft('20')
+                    }
                   }}
                 />
+                <View style={styles.daysRow}>
+                  <Text style={styles.daysLabel}>Active days target</Text>
+                  <TextInput
+                    style={[styles.modalInput, styles.daysInput]}
+                    value={targetDaysDraft}
+                    onChangeText={v => setTargetDaysDraft(v.replace(/[^0-9]/g, ''))}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    placeholder="20"
+                    placeholderTextColor={Colors.onSurfaceVariant}
+                    returnKeyType="done"
+                  />
+                </View>
                 <TouchableOpacity
                   style={[styles.shareBtn, { marginTop: 12, opacity: goalDraft.trim() ? 1 : 0.4 }]}
                   disabled={!goalDraft.trim()}
-                  onPress={() => { void saveGoal(goalDraft.trim(), 90); setGoalDraft('') }}
+                  onPress={() => {
+                    const days = Math.min(31, Math.max(1, parseInt(targetDaysDraft) || 20))
+                    void saveGoal(goalDraft.trim(), 90, days)
+                    setGoalDraft('')
+                    setTargetDaysDraft('20')
+                  }}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.shareBtnText}>Set goal</Text>
@@ -215,7 +242,7 @@ export default function HouseScreen() {
                 ) : momentum ? (
                   <>
                     <View style={styles.meterTrack}>
-                      <View style={[styles.meterFill, { width: `${Math.min(100, momentum.momentum_pct)}%` }]} />
+                      <View style={[styles.meterFill, { width: `${Math.min(100, Math.round((momentum.active_days / momentum.target_days) * 100))}%` }]} />
                     </View>
                     {goalEditing ? (
                       <TextInput
@@ -228,7 +255,7 @@ export default function HouseScreen() {
                         returnKeyType="done"
                         onSubmitEditing={() => {
                           if (goalDraft.trim()) {
-                            void saveGoal(goalDraft.trim(), goal.target_pct)
+                            void saveGoal(goalDraft.trim(), goal.target_pct, goal.target_days)
                             setGoalEditing(false); setGoalDraft('')
                           }
                         }}
@@ -237,7 +264,7 @@ export default function HouseScreen() {
                     ) : (
                       <TouchableOpacity onPress={() => { setGoalDraft(goal.reward_text); setGoalEditing(true) }}>
                         <Text style={styles.meterLabel}>
-                          {momentum.momentum_pct}% toward {goal.reward_text}
+                          {momentum.active_days} / {momentum.target_days} days — {goal.reward_text}
                         </Text>
                       </TouchableOpacity>
                     )}
@@ -558,4 +585,13 @@ const styles = StyleSheet.create({
   },
   meterLabel: { fontSize: 16, fontFamily: Fonts.bold, color: Colors.onSurface, marginBottom: 8 },
   recapCopy: { fontSize: 13, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant, lineHeight: 18, marginTop: 4 },
+
+  daysRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  daysLabel: { fontSize: 14, fontFamily: Fonts.semibold, color: Colors.onSurface },
+  daysInput: { width: 72, textAlign: 'center' },
 })
