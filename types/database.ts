@@ -53,3 +53,45 @@ export interface ChoreCompletion {
 export interface ChoreWithCompletion extends Chore {
   completion: ChoreCompletion | null
 }
+
+export type ScoreLedgerEventType =
+  | 'chore_completion'
+  | 'chore_completion_reversal'
+  | 'streak_bonus'
+
+export interface ScoreLedgerEntry {
+  id: string
+  user_id: string
+  house_id: string
+  event_type: ScoreLedgerEventType
+  points: number
+  chore_id: string | null
+  for_date: string        // YYYY-MM-DD
+  created_at: string
+}
+
+export interface UserStreak {
+  user_id: string
+  current_streak: number
+  longest_streak: number
+  last_active_date: string | null  // YYYY-MM-DD
+  updated_at: string
+}
+
+export interface HouseMonthlyGoal {
+  id: string
+  house_id: string
+  month: string           // YYYY-MM-DD, first of month
+  reward_text: string
+  target_pct: number
+  created_at: string
+  updated_at: string
+}
+
+export interface HouseMomentum {
+  on_time_completions: number
+  expected_completions: number
+  momentum_pct: number
+  reward_text: string | null
+  target_pct: number
+}
