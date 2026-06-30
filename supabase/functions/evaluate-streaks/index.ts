@@ -22,11 +22,22 @@ serve(async () => {
 
   for (const profile of profiles) {
     const tz = profile.timezone ?? 'America/Los_Angeles'
-    const localNow = new Date(new Date().toLocaleString('en-US', { timeZone: tz }))
-    const yesterday = new Date(localNow)
-    yesterday.setDate(yesterday.getDate() - 1)
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date())
+    const partMap = Object.fromEntries(parts.map(p => [p.type, p.value]))
+    const localToday = new Date(Date.UTC(
+      parseInt(partMap.year),
+      parseInt(partMap.month) - 1,
+      parseInt(partMap.day)
+    ))
+    const yesterday = new Date(localToday)
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1)
     const yesterdayStr = yesterday.toISOString().slice(0, 10)
-    const yesterdayDow = yesterday.getDay()
+    const yesterdayDow = yesterday.getUTCDay()
 
     // Fetch chores assigned to this user active on or before yesterday.
     // Include chores archived on/after yesterday (date-aware guard in isChoreActiveOnDate handles exact boundary).
