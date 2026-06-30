@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl } from 'react-native'
+import { useState, useMemo, useCallback, useRef } from 'react'
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Animated } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFocusEffect } from 'expo-router'
 import * as Updates from 'expo-updates'
@@ -13,6 +13,8 @@ import { Colors, Fonts, Shadows, AvatarGradients } from '@/constants/theme'
 import { useUserAccent } from '@/context/UserAccentContext'
 import { getChoresForDay, getProgressDotColor, getMondayOfWeek } from '@/lib/chores'
 import { ChoreWithCompletion } from '@/types/database'
+import { useTodayPoints } from '@/hooks/useTodayPoints'
+import { useStreak } from '@/hooks/useStreak'
 
 function todayISO() {
   const d = new Date()
@@ -28,6 +30,12 @@ export default function HomeScreen() {
 
   const { chores, completions, getChoresForSelectedDay, markDone, undoMarkDone, refetch } = useChores(house?.id, selectedDate)
   const [refreshing, setRefreshing] = useState(false)
+  const { todayPoints } = useTodayPoints(session?.user.id)
+  const { currentStreak } = useStreak(session?.user.id)
+
+  const pillOpacity = useRef(new Animated.Value(0)).current
+  const pillY = useRef(new Animated.Value(0)).current
+  const [pillText, setPillText] = useState<string | null>(null)
 
   useFocusEffect(useCallback(() => { refetch(); refetchHouse() }, [refetch, refetchHouse]))
 
@@ -81,11 +89,23 @@ export default function HomeScreen() {
     return { done: mc.filter(c => c.completion !== null).length, total: mc.length }
   }
 
+  function showPointPill(text: string) {
+    setPillText(text)
+    pillOpacity.setValue(1)
+    pillY.setValue(0)
+    Animated.parallel([
+      Animated.timing(pillOpacity, { toValue: 0, duration: 1200, useNativeDriver: true }),
+      Animated.timing(pillY, { toValue: -60, duration: 1200, useNativeDriver: true }),
+    ]).start(() => setPillText(null))
+  }
+
   async function handleToggle(chore: ChoreWithCompletion) {
     if (!session?.user.id) return
     if (chore.completion !== null) {
       await undoMarkDone(chore.id)
     } else {
+      const isOverdue = !!chore.due_date && chore.due_date < today
+      showPointPill(isOverdue ? '+15' : '+10')
       await markDone(chore.id, session.user.id)
     }
   }
@@ -120,6 +140,22 @@ export default function HomeScreen() {
             dotColors={dotColors}
           />
         </View>
+
+        {/* Rhythm Strip */}
+        {(currentStreak > 0 || todayPoints > 0) && (
+          <View style={styles.rhythmStrip}>
+            {currentStreak > 0 && (
+              <View style={styles.rhythmChip}>
+                <Text style={styles.rhythmChipText}>{currentStreak} days steady</Text>
+              </View>
+            )}
+            {todayPoints > 0 && (
+              <View style={[styles.rhythmChip, styles.rhythmChipPoints]}>
+                <Text style={[styles.rhythmChipText, styles.rhythmChipTextPoints]}>+{todayPoints} today</Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Avatar Row */}
         {members.length > 0 && (
@@ -202,6 +238,17 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+      {pillText && (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.pointPill,
+            { opacity: pillOpacity, transform: [{ translateY: pillY }] },
+          ]}
+        >
+          <Text style={styles.pointPillText}>{pillText}</Text>
+        </Animated.View>
+      )}
     </SafeAreaView>
   )
 }
@@ -257,4 +304,34 @@ const styles = StyleSheet.create({
   radioOuterOverdue: { borderColor: Colors.error },
   checkCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#00C853', alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   checkCircleIcon: { fontSize: 15, color: '#fff', fontFamily: Fonts.bold },
+  rhythmStrip: { flexDirection: 'row', gap: 8, paddingHorizontal: 20 },
+  rhythmChip: {
+    backgroundColor: Colors.surfaceContainer,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: Colors.outlineVariant,
+  },
+  rhythmChipPoints: {
+    backgroundColor: Colors.primaryFixed,
+    borderColor: Colors.primaryContainer,
+  },
+  rhythmChipText: { fontSize: 13, fontFamily: Fonts.semibold, color: Colors.onSurfaceVariant },
+  rhythmChipTextPoints: { color: Colors.primary },
+  pointPill: {
+    position: 'absolute',
+    bottom: 180,
+    alignSelf: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: 999,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  pointPillText: { fontSize: 22, fontFamily: Fonts.bold, color: '#fff' },
 })
