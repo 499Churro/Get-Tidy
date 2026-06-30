@@ -31,8 +31,9 @@ serve(async () => {
 
     const { data: chores } = await supabase
       .from('chores')
-      .select('id, name, frequency, due_date, days_of_week, created_at')
+      .select('id, name, frequency, due_date, days_of_week, created_at, archived_at')
       .eq('assigned_to', profile.id)
+      .or(`archived_at.is.null,archived_at.gte.${yesterday}`)
 
     for (const chore of chores ?? []) {
       if (!isChoreActiveOnDate(chore, yesterday, yesterdayDayOfWeek)) continue
