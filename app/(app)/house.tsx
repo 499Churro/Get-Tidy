@@ -7,11 +7,26 @@ import * as Updates from 'expo-updates'
 import { useFocusEffect } from 'expo-router'
 import { useAuth } from '@/hooks/useAuth'
 import { useHouse } from '@/hooks/useHouse'
+import { useHouseMomentum } from '@/hooks/useHouseMomentum'
+import { useMonthlyGoal } from '@/hooks/useMonthlyGoal'
 import { Avatar } from '@/components/ui/Avatar'
 import { Colors, Fonts, Shadows, AvatarGradients, Radii } from '@/constants/theme'
 import { useUserAccent } from '@/context/UserAccentContext'
 import { supabase } from '@/lib/supabase'
+import { HouseMomentum } from '@/types/database'
 
+
+function getRecapCopy(m: HouseMomentum): string {
+  if (m.momentum_pct >= m.target_pct) {
+    return m.reward_text ? `${m.reward_text} is still on track. Keep it up.` : 'On track. Keep it up.'
+  }
+  if (m.momentum_pct >= 70) {
+    return `Your house completed ${m.momentum_pct}% of chores on time this month.`
+  }
+  return m.reward_text
+    ? `${m.reward_text} is still in reach — a strong finish gets you there.`
+    : 'A strong finish can still turn things around.'
+}
 
 export default function HouseScreen() {
   const { accentColor } = useUserAccent()
@@ -42,6 +57,11 @@ export default function HouseScreen() {
   const [draftColor, setDraftColor] = useState(0)
   const [draftAvatarUri, setDraftAvatarUri] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [goalDraft, setGoalDraft] = useState('')
+  const [goalEditing, setGoalEditing] = useState(false)
+
+  const { momentum, loading: momentumLoading } = useHouseMomentum(house?.id)
+  const { goal, setGoal: saveGoal } = useMonthlyGoal(house?.id)
 
   const isOwner = house?.created_by === session?.user.id
 
@@ -156,6 +176,76 @@ export default function HouseScreen() {
             <Text style={styles.shareBtnText}>Share Code</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Monthly Momentum */}
+        {house && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>This Month</Text>
+            {!goal ? (
+              <View style={styles.card}>
+                <Text style={styles.goalEmptyTitle}>Set a house goal</Text>
+                <Text style={styles.goalEmptyBody}>
+                  Add a shared reward to track your month together — like "Movie night" or "Dinner out."
+                </Text>
+                <TextInput
+                  style={[styles.modalInput, { marginTop: 14 }]}
+                  value={goalDraft}
+                  onChangeText={setGoalDraft}
+                  placeholder="e.g. Movie night"
+                  placeholderTextColor={Colors.onSurfaceVariant}
+                  autoCapitalize="sentences"
+                  returnKeyType="done"
+                  onSubmitEditing={() => {
+                    if (goalDraft.trim()) { void saveGoal(goalDraft.trim(), 90); setGoalDraft('') }
+                  }}
+                />
+                <TouchableOpacity
+                  style={[styles.shareBtn, { marginTop: 12, opacity: goalDraft.trim() ? 1 : 0.4 }]}
+                  disabled={!goalDraft.trim()}
+                  onPress={() => { void saveGoal(goalDraft.trim(), 90); setGoalDraft('') }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.shareBtnText}>Set goal</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.card}>
+                {momentumLoading ? (
+                  <ActivityIndicator color={Colors.primary} />
+                ) : momentum ? (
+                  <>
+                    <View style={styles.meterTrack}>
+                      <View style={[styles.meterFill, { width: `${Math.min(100, momentum.momentum_pct)}%` }]} />
+                    </View>
+                    {goalEditing ? (
+                      <TextInput
+                        style={[styles.modalInput, { marginTop: 4, marginBottom: 8 }]}
+                        value={goalDraft}
+                        onChangeText={setGoalDraft}
+                        placeholder="Reward text"
+                        placeholderTextColor={Colors.onSurfaceVariant}
+                        autoFocus
+                        returnKeyType="done"
+                        onSubmitEditing={() => {
+                          if (goalDraft.trim()) { void saveGoal(goalDraft.trim(), goal.target_pct) }
+                          setGoalEditing(false); setGoalDraft('')
+                        }}
+                        onBlur={() => { setGoalEditing(false); setGoalDraft('') }}
+                      />
+                    ) : (
+                      <TouchableOpacity onPress={() => { setGoalDraft(goal.reward_text); setGoalEditing(true) }}>
+                        <Text style={styles.meterLabel}>
+                          {momentum.momentum_pct}% toward {goal.reward_text}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                    <Text style={styles.recapCopy}>{getRecapCopy(momentum)}</Text>
+                  </>
+                ) : null}
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Members */}
         <View style={styles.section}>
@@ -449,4 +539,21 @@ const styles = StyleSheet.create({
 
   leaveBtn: { paddingVertical: 16, alignItems: 'center' },
   leaveBtnText: { fontSize: 15, fontFamily: Fonts.semibold, color: Colors.error },
+
+  goalEmptyTitle: { fontSize: 17, fontFamily: Fonts.bold, color: Colors.onSurface, marginBottom: 4 },
+  goalEmptyBody: { fontSize: 13, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant, lineHeight: 18 },
+  meterTrack: {
+    height: 8,
+    backgroundColor: Colors.surfaceContainerHigh,
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  meterFill: {
+    height: 8,
+    backgroundColor: Colors.primary,
+    borderRadius: 999,
+  },
+  meterLabel: { fontSize: 16, fontFamily: Fonts.bold, color: Colors.onSurface, marginBottom: 8 },
+  recapCopy: { fontSize: 13, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant, lineHeight: 18, marginTop: 4 },
 })
