@@ -227,8 +227,10 @@ export default function HouseScreen() {
                         autoFocus
                         returnKeyType="done"
                         onSubmitEditing={() => {
-                          if (goalDraft.trim()) { void saveGoal(goalDraft.trim(), goal.target_pct) }
-                          setGoalEditing(false); setGoalDraft('')
+                          if (goalDraft.trim()) {
+                            void saveGoal(goalDraft.trim(), goal.target_pct)
+                            setGoalEditing(false); setGoalDraft('')
+                          }
                         }}
                         onBlur={() => { setGoalEditing(false); setGoalDraft('') }}
                       />
