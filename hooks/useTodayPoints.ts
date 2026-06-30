@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 
 function todayISO(): string {
@@ -9,7 +9,7 @@ function todayISO(): string {
 export function useTodayPoints(userId: string | undefined) {
   const [todayPoints, setTodayPoints] = useState(0)
 
-  async function fetch() {
+  const fetch = useCallback(async () => {
     if (!userId) { setTodayPoints(0); return }
     const { data } = await supabase
       .from('score_ledger')
@@ -18,7 +18,7 @@ export function useTodayPoints(userId: string | undefined) {
       .eq('for_date', todayISO())
     const sum = (data ?? []).reduce((acc, row) => acc + row.points, 0)
     setTodayPoints(Math.max(0, sum))
-  }
+  }, [userId])
 
   useEffect(() => {
     fetch()
@@ -31,7 +31,7 @@ export function useTodayPoints(userId: string | undefined) {
       }, fetch)
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [userId])
+  }, [userId, fetch])
 
   return { todayPoints }
 }
