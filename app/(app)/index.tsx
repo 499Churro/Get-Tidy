@@ -9,6 +9,7 @@ import { useChores } from '@/hooks/useChores'
 import { WeekStrip } from '@/components/chores/WeekStrip'
 import { AvatarRow } from '@/components/chores/AvatarRow'
 import { HeroCard } from '@/components/chores/HeroCard'
+import { TidyLogo } from '@/components/ui/TidyLogo'
 import { Colors, Fonts, Shadows, AvatarGradients } from '@/constants/theme'
 import { useUserAccent } from '@/context/UserAccentContext'
 import { getChoresForDay, getProgressDotColor, getMondayOfWeek } from '@/lib/chores'
@@ -119,7 +120,8 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <View>
+        <TidyLogo />
+        <View style={styles.headerGreeting}>
           <Text style={styles.headerTitle}>Welcome back,</Text>
           <Text style={styles.headerName}>{profile?.display_name?.split(' ')[0] ?? 'there'}</Text>
         </View>
@@ -266,8 +268,9 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.surfaceContainerHigh,
     ...Shadows.card,
   },
-  headerTitle: { fontSize: 18, fontFamily: Fonts.bold, color: Colors.onSurface },
-  headerName: { fontSize: 12, fontFamily: Fonts.medium, color: Colors.primary },
+  headerGreeting: { alignItems: 'flex-end' },
+  headerTitle: { fontSize: 11, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
+  headerName: { fontSize: 14, fontFamily: Fonts.bold, color: Colors.primary },
   scroll: { flex: 1 },
   content: { paddingBottom: 100, gap: 16, paddingVertical: 16, paddingHorizontal: 20 },
   fullBleed: { marginHorizontal: -20 },

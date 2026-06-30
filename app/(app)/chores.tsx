@@ -136,6 +136,10 @@ export default function ChoresManagerScreen() {
           <Text style={styles.headerTitle}>Chores</Text>
           <Text style={styles.headerSub}>Manage & assign tasks</Text>
         </View>
+        <View style={styles.greeting}>
+          <Text style={styles.greetSub}>Welcome back,</Text>
+          <Text style={styles.greetName}>{profile?.display_name?.split(' ')[0] ?? 'there'}</Text>
+        </View>
       </View>
 
       <ScrollView
@@ -257,6 +261,9 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 18, fontFamily: Fonts.bold, color: Colors.primary },
   headerSub: { fontSize: 12, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
+  greeting: { alignItems: 'flex-end' },
+  greetSub: { fontSize: 11, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
+  greetName: { fontSize: 14, fontFamily: Fonts.bold, color: Colors.primary },
 
   content: { padding: 20, paddingBottom: 120, gap: 28 },
 
