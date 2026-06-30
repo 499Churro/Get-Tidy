@@ -1,7 +1,8 @@
 import { useRef, useState, useCallback } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native'
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, RefreshControl } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFocusEffect } from 'expo-router'
+import * as Updates from 'expo-updates'
 import { LinearGradient } from 'expo-linear-gradient'
 import BottomSheet from '@gorhom/bottom-sheet'
 import { useAuth } from '@/hooks/useAuth'
@@ -15,16 +16,22 @@ import { Chore, Frequency } from '@/types/database'
 const FREQ_LABEL: Record<Frequency, string> = {
   daily: 'Daily',
   weekly: 'Weekly',
+  biweekly: 'Every 2 weeks',
+  monthly: 'Monthly',
 }
 
 const FREQ_COLOR: Record<Frequency, string> = {
   daily: Colors.secondaryContainer,
   weekly: Colors.secondaryContainer,
+  biweekly: Colors.secondaryContainer,
+  monthly: Colors.secondaryContainer,
 }
 
 const FREQ_TEXT: Record<Frequency, string> = {
   daily: Colors.onSecondaryContainer,
   weekly: Colors.onSecondaryContainer,
+  biweekly: Colors.onSecondaryContainer,
+  monthly: Colors.onSecondaryContainer,
 }
 
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
@@ -47,8 +54,25 @@ export default function ChoresManagerScreen() {
   const [editingChore, setEditingChore] = useState<Chore | null>(null)
 
   const { chores, addChore, updateChore, deleteChore, refetch } = useChores(house?.id, todayISO())
+  const [refreshing, setRefreshing] = useState(false)
 
   useFocusEffect(useCallback(() => { refetch() }, [refetch]))
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    try {
+      if (!__DEV__) {
+        const update = await Updates.checkForUpdateAsync()
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync()
+          await Updates.reloadAsync()
+          return
+        }
+      }
+    } catch {}
+    await refetch()
+    setRefreshing(false)
+  }, [refetch])
 
   function getMemberName(userId: string | null) {
     if (!userId) return 'Unassigned'
@@ -97,7 +121,7 @@ export default function ChoresManagerScreen() {
   const repeating = chores.filter(c => !c.due_date)
   const groups: Group[] = [
     { key: 'once', label: 'One Time', items: oneTime },
-    ...(['daily', 'weekly'] as Frequency[]).map(freq => ({
+    ...(['daily', 'weekly', 'biweekly', 'monthly'] as Frequency[]).map(freq => ({
       key: freq,
       label: FREQ_LABEL[freq],
       items: repeating.filter(c => c.frequency === freq),
@@ -114,7 +138,11 @@ export default function ChoresManagerScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
         {chores.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>No chores yet</Text>
@@ -164,6 +192,9 @@ export default function ChoresManagerScreen() {
                           <Text style={styles.daysLabel}>{chore.due_date}</Text>
                         ) : chore.days_of_week?.length ? (
                           <Text style={styles.daysLabel}>{formatDays(chore.days_of_week)}</Text>
+                        ) : null}
+                        {chore.notes ? (
+                          <Text style={styles.notesLabel} numberOfLines={2}>{chore.notes}</Text>
                         ) : null}
                       </View>
 
@@ -256,6 +287,7 @@ const styles = StyleSheet.create({
   assigneeName: { fontSize: 12, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
   unassigned: { color: Colors.outline, fontFamily: Fonts.medium },
   daysLabel: { fontSize: 11, fontFamily: Fonts.medium, color: Colors.outline },
+  notesLabel: { fontSize: 11, fontFamily: Fonts.regular, color: Colors.onSurfaceVariant, fontStyle: 'italic' },
 
   choreActions: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingRight: 12 },
   actionBtn: {

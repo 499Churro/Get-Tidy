@@ -1,4 +1,4 @@
-export type Frequency = 'daily' | 'weekly'
+export type Frequency = 'daily' | 'weekly' | 'biweekly' | 'monthly'
 
 export interface Profile {
   id: string
@@ -36,6 +36,7 @@ export interface Chore {
   notes: string | null
   frequency: Frequency
   days_of_week: number[] | null
+  reminder_time: string | null
   created_at: string
   assigned_profile?: Profile
 }

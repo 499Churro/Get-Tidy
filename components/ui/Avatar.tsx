@@ -19,31 +19,46 @@ export function Avatar({ uri, displayName, colorIndex, size = 38, ringColor }: A
     .toUpperCase()
   const [gradStart, gradEnd] = AvatarGradients[colorIndex % AvatarGradients.length]
 
+  const ringWidth = 2.5
+  const outerSize = ringColor ? size + ringWidth * 2 + 2 : size
+
   return (
     <View
-      style={[
-        styles.wrapper,
-        { width: size, height: size, borderRadius: size / 2 },
-        ringColor ? { borderWidth: 2.5, borderColor: ringColor } : null,
-      ]}
+      style={{
+        width: outerSize,
+        height: outerSize,
+        borderRadius: outerSize / 2,
+        borderWidth: ringColor ? ringWidth : 0,
+        borderColor: ringColor ?? 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
     >
-      {uri ? (
-        <Image source={{ uri }} style={{ width: size, height: size, borderRadius: size / 2 }} />
-      ) : (
-        <LinearGradient
-          colors={[gradStart, gradEnd]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ width: size, height: size, borderRadius: size / 2, alignItems: 'center', justifyContent: 'center' }}
-        >
-          <Text style={[styles.initials, { fontSize: size * 0.35 }]}>{initials}</Text>
-        </LinearGradient>
-      )}
+      <View
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          overflow: 'hidden',
+        }}
+      >
+        {uri ? (
+          <Image source={{ uri }} style={{ width: size, height: size }} />
+        ) : (
+          <LinearGradient
+            colors={[gradStart, gradEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Text style={[styles.initials, { fontSize: size * 0.35 }]}>{initials}</Text>
+          </LinearGradient>
+        )}
+      </View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  wrapper: { overflow: 'hidden' },
   initials: { color: '#fff', fontWeight: '700' },
 })

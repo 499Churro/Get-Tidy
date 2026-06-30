@@ -36,11 +36,31 @@ export function getChoresForDay(chores: Chore[], forDate: string): Chore[] {
 
     if (chore.frequency === 'weekly') {
       if (dow?.length) return dow.includes(dayOfWeek)
-      // Legacy weekly (no days_of_week): show all week
       const mondayDate = new Date(monday)
       const sunday = new Date(mondayDate)
       sunday.setUTCDate(mondayDate.getUTCDate() + 6)
       return date >= mondayDate && date <= sunday
+    }
+
+    if (chore.frequency === 'biweekly') {
+      if (!dow?.length || !dow.includes(dayOfWeek)) return false
+      // Count weeks since chore creation week — show on even weeks (0, 2, 4...)
+      const creationMonday = getMondayOfWeek(chore.created_at.slice(0, 10))
+      const creationMs = new Date(creationMonday).getTime()
+      const currentMs = new Date(monday).getTime()
+      const weeksDiff = Math.round((currentMs - creationMs) / (7 * 24 * 60 * 60 * 1000))
+      return weeksDiff >= 0 && weeksDiff % 2 === 0
+    }
+
+    if (chore.frequency === 'monthly') {
+      if (!dow?.length || !dow.includes(dayOfWeek)) return false
+      // Show on the first occurrence of this weekday in each month
+      const firstOfMonth = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1))
+      const firstDow = firstOfMonth.getUTCDay()
+      const daysUntil = (dayOfWeek - firstDow + 7) % 7
+      const firstOccurrence = new Date(firstOfMonth)
+      firstOccurrence.setUTCDate(1 + daysUntil)
+      return date.getUTCDate() === firstOccurrence.getUTCDate()
     }
 
     return false

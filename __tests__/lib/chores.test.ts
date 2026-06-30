@@ -11,6 +11,7 @@ const baseChore: Chore = {
   notes: null,
   frequency: 'daily',
   days_of_week: null,
+  reminder_time: null,
   created_at: '2026-06-22T00:00:00Z',
 }
 

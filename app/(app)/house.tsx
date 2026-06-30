@@ -1,22 +1,46 @@
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Share, Linking, Modal, TextInput, ActivityIndicator } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Share, Linking, Modal, TextInput, ActivityIndicator, Image, RefreshControl } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
+import * as ImagePicker from 'expo-image-picker'
+import * as Updates from 'expo-updates'
+import { useFocusEffect } from 'expo-router'
 import { useAuth } from '@/hooks/useAuth'
 import { useHouse } from '@/hooks/useHouse'
 import { Avatar } from '@/components/ui/Avatar'
 import { Colors, Fonts, Shadows, AvatarGradients, Radii } from '@/constants/theme'
 import { useUserAccent } from '@/context/UserAccentContext'
+import { supabase } from '@/lib/supabase'
 
 
 export default function HouseScreen() {
   const { accentColor } = useUserAccent()
-  const { session, profile, updateProfile } = useAuth()
-  const { house, members, loading: houseLoading, leaveHouse } = useHouse(session?.user.id)
+  const { session, profile, updateProfile, refreshProfile } = useAuth()
+  const { house, members, loading: houseLoading, leaveHouse, refetch: refetchHouse } = useHouse(session?.user.id)
+  const [refreshing, setRefreshing] = useState(false)
+
+  useFocusEffect(useCallback(() => { refetchHouse(); refreshProfile() }, [refetchHouse, refreshProfile]))
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    try {
+      if (!__DEV__) {
+        const update = await Updates.checkForUpdateAsync()
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync()
+          await Updates.reloadAsync()
+          return
+        }
+      }
+    } catch {}
+    await Promise.all([refetchHouse(), refreshProfile()])
+    setRefreshing(false)
+  }, [refetchHouse, refreshProfile])
   // Profile edit modal
   const [editOpen, setEditOpen] = useState(false)
   const [draftName, setDraftName] = useState('')
   const [draftColor, setDraftColor] = useState(0)
+  const [draftAvatarUri, setDraftAvatarUri] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
   const isOwner = house?.created_by === session?.user.id
@@ -24,21 +48,51 @@ export default function HouseScreen() {
   function openEditProfile() {
     setDraftName(profile?.display_name ?? '')
     setDraftColor(profile?.avatar_color_index ?? 0)
+    setDraftAvatarUri(null)
     setEditOpen(true)
+  }
+
+  async function pickPhoto() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    })
+    if (!result.canceled) setDraftAvatarUri(result.assets[0].uri)
   }
 
   async function handleSaveProfile() {
     if (!draftName.trim()) return
     setSaving(true)
-    const { error, apply } = await updateProfile(
-      { display_name: draftName.trim(), avatar_color_index: draftColor },
-      { applyImmediately: false }
-    )
-    setSaving(false)
-    if (error) { Alert.alert('Error', error); return }
-    setEditOpen(false)
-    // Apply color state after modal slide-out animation (300ms) so there's no mid-animation flash
-    setTimeout(apply, 320)
+    try {
+      let avatar_url: string | undefined
+      if (draftAvatarUri && session?.user.id) {
+        const uriParts = draftAvatarUri.split('.')
+        const ext = uriParts[uriParts.length - 1]?.split('?')[0] ?? 'jpg'
+        const mime = ext === 'png' ? 'image/png' : 'image/jpeg'
+        const path = `${session.user.id}/avatar.${ext}`
+        const response = await fetch(draftAvatarUri)
+        const arrayBuffer = await response.arrayBuffer()
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(path, arrayBuffer, { contentType: mime, upsert: true })
+        if (uploadError) {
+          Alert.alert('Photo upload failed', uploadError.message)
+          return
+        }
+        const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+        avatar_url = `${data.publicUrl}?t=${Date.now()}`
+      }
+      const { error } = await updateProfile(
+        { display_name: draftName.trim(), avatar_color_index: draftColor, ...(avatar_url ? { avatar_url } : {}) },
+        { applyImmediately: true }
+      )
+      if (error) { Alert.alert('Error', error); return }
+      setEditOpen(false)
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleShareCode() {
@@ -64,7 +118,7 @@ export default function HouseScreen() {
     )
   }
 
-  if (houseLoading) return <ActivityIndicator style={{ flex: 1 }} color={Colors.primary} />
+  if (houseLoading && !house) return <ActivityIndicator style={{ flex: 1 }} color={Colors.primary} />
   if (!house) return null
 
   return (
@@ -81,7 +135,11 @@ export default function HouseScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
         {/* House info */}
         <View style={styles.houseInfo}>
           <Text style={styles.houseName}>{house.name}</Text>
@@ -174,6 +232,23 @@ export default function HouseScreen() {
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>Edit your profile</Text>
 
+            {/* Photo */}
+            <Text style={styles.modalLabel}>Profile photo</Text>
+            <TouchableOpacity onPress={pickPhoto} style={styles.photoPickerRow} activeOpacity={0.7}>
+              {draftAvatarUri ? (
+                <Image source={{ uri: draftAvatarUri }} style={styles.photoPreview} />
+              ) : profile?.avatar_url ? (
+                <Image source={{ uri: profile.avatar_url }} style={styles.photoPreview} />
+              ) : (
+                <View style={styles.photoPlaceholder}>
+                  <Text style={styles.photoPlaceholderText}>＋</Text>
+                </View>
+              )}
+              <Text style={styles.photoPickerLabel}>
+                {draftAvatarUri ? 'Change photo' : profile?.avatar_url ? 'Change photo' : 'Add photo'}
+              </Text>
+            </TouchableOpacity>
+
             {/* Name */}
             <Text style={styles.modalLabel}>Display name</Text>
             <TextInput
@@ -259,7 +334,7 @@ const styles = StyleSheet.create({
   headerSub: { fontSize: 12, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
   greeting: { alignItems: 'flex-end' },
   greetSub: { fontSize: 11, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
-  greetName: { fontSize: 14, fontFamily: Fonts.bold, color: Colors.onSurface },
+  greetName: { fontSize: 14, fontFamily: Fonts.bold, color: Colors.primary },
   content: { padding: 20, gap: 24, paddingBottom: 100 },
 
   houseInfo: { alignItems: 'center', gap: 4 },
@@ -361,6 +436,11 @@ const styles = StyleSheet.create({
   saveBtnText: { fontSize: 15, fontFamily: Fonts.bold, color: '#fff' },
   cancelBtn: { paddingVertical: 12, alignItems: 'center' },
   cancelBtnText: { fontSize: 14, fontFamily: Fonts.semibold, color: Colors.onSurfaceVariant },
+  photoPickerRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 8 },
+  photoPreview: { width: 56, height: 56, borderRadius: 28 },
+  photoPlaceholder: { width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.surfaceContainerLow, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: Colors.outlineVariant },
+  photoPlaceholderText: { fontSize: 22, color: Colors.onSurfaceVariant },
+  photoPickerLabel: { fontSize: 14, fontFamily: Fonts.semibold, color: Colors.primary },
 
   notifHint: { fontSize: 13, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant, paddingVertical: 4 },
   divider: { height: 1, backgroundColor: Colors.surfaceContainerHigh, marginVertical: 4 },

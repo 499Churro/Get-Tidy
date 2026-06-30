@@ -17,20 +17,32 @@ serve(async () => {
   const messages: object[] = []
 
   for (const profile of profiles ?? []) {
-    // Only notify users where it's currently 8am local
     const localDate = new Date(nowUtc.toLocaleString('en-US', { timeZone: profile.timezone }))
-    if (localDate.getHours() !== 8) continue
-
+    const localHour = localDate.getHours()
+    const localMinute = localDate.getMinutes()
     const todayLocal = nowUtc.toLocaleDateString('en-CA', { timeZone: profile.timezone })
-    const localDayOfWeek = localDate.getDay() // 0=Sun … 6=Sat
+    const localDayOfWeek = localDate.getDay()
 
     const { data: chores } = await supabase
       .from('chores')
-      .select('id, name, frequency, due_date, days_of_week, created_at')
+      .select('id, name, frequency, due_date, days_of_week, created_at, reminder_time')
       .eq('assigned_to', profile.id)
 
     for (const chore of chores ?? []) {
       if (!isChoreActiveOnDate(chore, todayLocal, localDayOfWeek)) continue
+
+      // Determine the reminder hour/minute for this chore:
+      // If the chore has a custom reminder_time (HH:MM), use it.
+      // Otherwise fall back to the default 8:00am.
+      let targetHour = 8
+      let targetMinute = 0
+      if (chore.reminder_time) {
+        const [h, m] = chore.reminder_time.split(':').map(Number)
+        targetHour = h
+        targetMinute = m
+      }
+
+      if (localHour !== targetHour || localMinute !== targetMinute) continue
 
       const { count } = await supabase
         .from('chore_completions')

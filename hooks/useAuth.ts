@@ -7,7 +7,7 @@ interface AuthState {
   session: Session | null
   profile: Profile | null
   loading: boolean
-  updateProfile: (updates: { display_name?: string; avatar_color_index?: number }, opts?: { applyImmediately?: boolean }) => Promise<{ error: string | null; apply: () => void }>
+  updateProfile: (updates: { display_name?: string; avatar_color_index?: number; avatar_url?: string }, opts?: { applyImmediately?: boolean }) => Promise<{ error: string | null; apply: () => void }>
   refreshProfile: () => Promise<void>
 }
 

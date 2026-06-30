@@ -6,16 +6,20 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.tidy.app",
+      "bundleIdentifier": "com.alexjchen.tidy",
       "usesAppleSignIn": true,
       "associatedDomains": [
         "applinks:tidy.app"
-      ]
+      ],
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.tidy.app",
@@ -40,17 +44,24 @@
     "plugins": [
       "expo-router",
       "expo-apple-authentication",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/notification-icon.png"
-        }
-      ],
+      "expo-notifications",
       "expo-localization",
       "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "54f47212-f150-4702-898a-33efa8548802"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/54f47212-f150-4702-898a-33efa8548802"
     }
   }
 }

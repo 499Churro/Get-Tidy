@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFocusEffect } from 'expo-router'
+import * as Updates from 'expo-updates'
 import { useAuth } from '@/hooks/useAuth'
 import { useHouse } from '@/hooks/useHouse'
 import { useChores } from '@/hooks/useChores'
@@ -9,7 +10,7 @@ import { WeekStrip } from '@/components/chores/WeekStrip'
 import { AvatarRow } from '@/components/chores/AvatarRow'
 import { HeroCard } from '@/components/chores/HeroCard'
 import { Colors, Fonts, Shadows, AvatarGradients } from '@/constants/theme'
-import { TidyLogo } from '@/components/ui/TidyLogo'
+import { useUserAccent } from '@/context/UserAccentContext'
 import { getChoresForDay, getProgressDotColor, getMondayOfWeek } from '@/lib/chores'
 import { ChoreWithCompletion } from '@/types/database'
 
@@ -19,14 +20,32 @@ function todayISO() {
 }
 
 export default function HomeScreen() {
-  const { session, profile } = useAuth()
-  const { house, members } = useHouse(session?.user.id)
+  const { accentColor } = useUserAccent()
+  const { session, profile, refreshProfile } = useAuth()
+  const { house, members, refetch: refetchHouse } = useHouse(session?.user.id)
   const [selectedDate, setSelectedDate] = useState(todayISO())
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
   const { chores, completions, getChoresForSelectedDay, markDone, undoMarkDone, refetch } = useChores(house?.id, selectedDate)
+  const [refreshing, setRefreshing] = useState(false)
 
-  useFocusEffect(useCallback(() => { refetch() }, [refetch]))
+  useFocusEffect(useCallback(() => { refetch(); refetchHouse() }, [refetch, refetchHouse]))
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    try {
+      if (!__DEV__) {
+        const update = await Updates.checkForUpdateAsync()
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync()
+          await Updates.reloadAsync()
+          return
+        }
+      }
+    } catch {}
+    await Promise.all([refetch(), refetchHouse(), refreshProfile()])
+    setRefreshing(false)
+  }, [refetch, refetchHouse, refreshProfile])
 
   const dotColors = useMemo(() => {
     const monday = getMondayOfWeek(selectedDate)
@@ -80,10 +99,9 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TidyLogo />
-        <View style={styles.greeting}>
-          <Text style={styles.greetSub}>Welcome back,</Text>
-          <Text style={styles.greetName}>{profile?.display_name?.split(' ')[0] ?? 'there'}</Text>
+        <View>
+          <Text style={styles.headerTitle}>Welcome back,</Text>
+          <Text style={styles.headerName}>{profile?.display_name?.split(' ')[0] ?? 'there'}</Text>
         </View>
       </View>
 
@@ -92,6 +110,7 @@ export default function HomeScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {/* Week Strip */}
         <View style={styles.fullBleed}>
@@ -166,6 +185,9 @@ export default function HomeScreen() {
                       )}
                     </View>
                     <Text style={[styles.choreMeta, isOverdue && styles.choreMetaOverdue]}>{personLabel}</Text>
+                    {chore.notes ? (
+                      <Text style={styles.choreNotes} numberOfLines={2}>{chore.notes}</Text>
+                    ) : null}
                   </View>
                   {isDone ? (
                     <View style={styles.checkCircle}>
@@ -197,9 +219,8 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.surfaceContainerHigh,
     ...Shadows.card,
   },
-  greeting: { alignItems: 'flex-end' },
-  greetSub: { fontSize: 11, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
-  greetName: { fontSize: 14, fontFamily: Fonts.bold, color: Colors.onSurface },
+  headerTitle: { fontSize: 18, fontFamily: Fonts.bold, color: Colors.onSurface },
+  headerName: { fontSize: 12, fontFamily: Fonts.medium, color: Colors.primary },
   scroll: { flex: 1 },
   content: { paddingBottom: 100, gap: 16, paddingVertical: 16, paddingHorizontal: 20 },
   fullBleed: { marginHorizontal: -20 },
@@ -228,6 +249,7 @@ const styles = StyleSheet.create({
   choreNameDone: { textDecorationLine: 'line-through', color: Colors.onSurfaceVariant },
   choreNameOverdue: { color: Colors.error },
   choreMeta: { fontSize: 12, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
+  choreNotes: { fontSize: 11, fontFamily: Fonts.regular, color: Colors.onSurfaceVariant, fontStyle: 'italic' },
   choreMetaOverdue: { color: Colors.error },
   overdueBadge: { backgroundColor: Colors.errorContainer, borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2 },
   overdueBadgeText: { fontSize: 9, fontFamily: Fonts.bold, color: Colors.error, textTransform: 'uppercase' },

@@ -1,5 +1,5 @@
 import { forwardRef, useState, useCallback, useEffect } from 'react'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Switch } from 'react-native'
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -30,6 +30,8 @@ type RepeatMode = 'once' | Frequency
 const REPEAT_OPTIONS: { value: RepeatMode; label: string }[] = [
   { value: 'once', label: 'One time' },
   { value: 'weekly', label: 'Weekly' },
+  { value: 'biweekly', label: 'Every 2 weeks' },
+  { value: 'monthly', label: 'Monthly' },
 ]
 
 interface ChoreParams {
@@ -39,6 +41,7 @@ interface ChoreParams {
   notes: string | null
   frequency: Frequency
   daysOfWeek: number[] | null
+  reminderTime: string | null
   houseId: string
   createdBy: string
 }
@@ -57,6 +60,11 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
   function AddChoreSheet({ members, currentUserId, houseId, editingChore, onAdd, onUpdate, onClose }, ref) {
     const [name, setName] = useState('')
     const [assignedTo, setAssignedTo] = useState<string | null>(currentUserId)
+    const [reminderEnabled, setReminderEnabled] = useState(false)
+    const [reminderTime, setReminderTime] = useState<Date>(() => {
+      const d = new Date(); d.setHours(8, 0, 0, 0); return d
+    })
+    const [showReminderPicker, setShowReminderPicker] = useState(false)
     const [notes, setNotes] = useState('')
     const [repeatMode, setRepeatMode] = useState<RepeatMode>('weekly')
     const [daysOfWeek, setDaysOfWeek] = useState<number[]>([1])
@@ -73,6 +81,10 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
       setOneTimeDate(new Date())
       setShowDatePicker(false)
       setAssignedTo(currentUserId)
+      setReminderEnabled(false)
+      const d = new Date(); d.setHours(8, 0, 0, 0)
+      setReminderTime(d)
+      setShowReminderPicker(false)
     }, [currentUserId])
 
     useEffect(() => {
@@ -84,7 +96,7 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
           setRepeatMode('once')
           setOneTimeDate(new Date(editingChore.due_date + 'T00:00:00'))
         } else {
-          const freq = editingChore.frequency === 'daily' ? 'weekly' : editingChore.frequency
+          const freq: RepeatMode = editingChore.frequency === 'daily' ? 'weekly' : editingChore.frequency
           setRepeatMode(freq)
           setDaysOfWeek(
             editingChore.days_of_week?.length
@@ -93,6 +105,14 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
                 ? [0, 1, 2, 3, 4, 5, 6]
                 : [1]
           )
+        }
+        if (editingChore.reminder_time) {
+          setReminderEnabled(true)
+          const [h, m] = editingChore.reminder_time.split(':').map(Number)
+          const d = new Date(); d.setHours(h, m, 0, 0)
+          setReminderTime(d)
+        } else {
+          setReminderEnabled(false)
         }
       } else {
         resetForm()
@@ -114,8 +134,11 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
 
       const isOnce = repeatMode === 'once'
       const dueDateStr = isOnce ? localDateStr(oneTimeDate) : null
-      const frequency: Frequency = isOnce ? 'weekly' : repeatMode
+      const frequency: Frequency = isOnce ? 'weekly' : (repeatMode as Frequency)
       const days = isOnce ? null : daysOfWeek
+      const reminderStr = reminderEnabled
+        ? `${String(reminderTime.getHours()).padStart(2, '0')}:${String(reminderTime.getMinutes()).padStart(2, '0')}`
+        : null
 
       let error: string | null = null
       try {
@@ -123,13 +146,14 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
           const result = await onUpdate(editingChore.id, {
             name: name.trim(), assignedTo, dueDate: dueDateStr,
             notes: notes.trim() || null, frequency, daysOfWeek: days,
+            reminderTime: reminderStr,
           })
           error = result.error
         } else {
           const result = await onAdd({
             name: name.trim(), assignedTo, dueDate: dueDateStr,
             notes: notes.trim() || null, frequency, daysOfWeek: days,
-            houseId, createdBy: currentUserId,
+            reminderTime: reminderStr, houseId, createdBy: currentUserId,
           })
           error = result.error
         }
@@ -283,6 +307,51 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
               </>
             )}
 
+            {/* Reminder */}
+            <View style={styles.reminderRow}>
+              <View style={styles.reminderLeft}>
+                <Text style={styles.fieldLabel}>Remind me</Text>
+                {reminderEnabled && (
+                  <TouchableOpacity onPress={() => setShowReminderPicker(true)} style={styles.reminderTimeBtn}>
+                    <Text style={[styles.reminderTimeText, { color: accentColor }]}>
+                      {reminderTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              <Switch
+                value={reminderEnabled}
+                onValueChange={setReminderEnabled}
+                trackColor={{ false: Colors.surfaceContainerHigh, true: accentColor }}
+                thumbColor="#fff"
+              />
+            </View>
+            <Modal
+              visible={showReminderPicker}
+              transparent
+              animationType="fade"
+              onRequestClose={() => setShowReminderPicker(false)}
+            >
+              <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowReminderPicker(false)}>
+                <TouchableOpacity activeOpacity={1} style={styles.modalCard}>
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>Reminder time</Text>
+                    <TouchableOpacity onPress={() => setShowReminderPicker(false)}>
+                      <Text style={[styles.modalDone, { color: accentColor }]}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <DateTimePicker
+                    value={reminderTime}
+                    mode="time"
+                    display="spinner"
+                    onChange={(_, selected) => { if (selected) setReminderTime(selected) }}
+                    style={{ width: '100%' }}
+                    themeVariant="light"
+                  />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            </Modal>
+
             {/* Notes */}
             <Text style={styles.fieldLabel}>Notes <Text style={styles.optional}>(optional)</Text></Text>
             <TextInput
@@ -364,6 +433,10 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.outlineVariant, marginBottom: 20, color: Colors.onSurface,
   },
   notesInput: { height: 72, textAlignVertical: 'top' },
+  reminderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
+  reminderLeft: { flex: 1, gap: 4 },
+  reminderTimeBtn: { alignSelf: 'flex-start' },
+  reminderTimeText: { fontSize: 15, fontFamily: Fonts.semibold },
   errorText: { fontSize: 13, fontFamily: Fonts.medium, color: Colors.error, textAlign: 'center', marginBottom: 8 },
   saveWrapper: { marginTop: 8, marginBottom: 20 },
   saveWrapperDisabled: { opacity: 0.5 },

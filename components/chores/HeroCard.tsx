@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
-import { Colors, Fonts, Radii, Shadows } from '@/constants/theme'
+import { Colors, Fonts, Radii, Shadows, AvatarGradients } from '@/constants/theme'
 import { ChoreWithCompletion, Profile } from '@/types/database'
 import { useUserAccent } from '@/context/UserAccentContext'
 
@@ -20,6 +20,10 @@ function hoursUntil(dateStr: string): number | null {
 
 export function HeroCard({ chore, allDone, viewingProfile, isSelf, onMarkDone }: HeroCardProps) {
   const { accentColor } = useUserAccent()
+  const assigneeColorIdx = chore?.assigned_profile?.avatar_color_index ?? -1
+  const assigneeColor = assigneeColorIdx >= 0
+    ? AvatarGradients[assigneeColorIdx % AvatarGradients.length][0]
+    : accentColor
   const emptyMessage = viewingProfile
     ? `${viewingProfile.display_name.split(' ')[0]} has nothing today.`
     : 'You have nothing today.'
@@ -45,15 +49,18 @@ export function HeroCard({ chore, allDone, viewingProfile, isSelf, onMarkDone }:
 
   return (
     <View style={styles.card}>
-      <View style={[styles.leftStripe, { backgroundColor: accentColor }]} />
+      <View style={[styles.leftStripe, { backgroundColor: assigneeColor }]} />
       <View style={styles.inner}>
         <View style={styles.topRow}>
           <View style={styles.titleBlock}>
-            <Text style={[styles.eyebrow, { color: accentColor }]}>Priority Chore</Text>
+            <Text style={[styles.eyebrow, { color: assigneeColor }]}>Priority Chore</Text>
             <Text style={styles.choreName} numberOfLines={2}>{chore.name}</Text>
+            {chore.notes ? (
+              <Text style={styles.choreNotes} numberOfLines={2}>{chore.notes}</Text>
+            ) : null}
             <View style={styles.assigneeRow}>
-              <View style={[styles.assigneeInitial, { backgroundColor: accentColor + '22' }]}>
-                <Text style={[styles.assigneeInitialText, { color: accentColor }]}>{assigneeName[0]}</Text>
+              <View style={[styles.assigneeInitial, { backgroundColor: assigneeColor + '22' }]}>
+                <Text style={[styles.assigneeInitialText, { color: assigneeColor }]}>{assigneeName[0]}</Text>
               </View>
               <Text style={styles.assigneeLabel}>
                 {chore.assigned_to ? `Assigned to ${assigneeName}` : 'Unassigned'}
@@ -119,6 +126,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     color: Colors.onSurface,
   },
+  choreNotes: { fontSize: 12, fontFamily: Fonts.regular, color: Colors.onSurfaceVariant, fontStyle: 'italic' },
   assigneeRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   assigneeInitial: {
     width: 22,

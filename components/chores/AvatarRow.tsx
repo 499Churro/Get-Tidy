@@ -40,7 +40,7 @@ export function AvatarRow({ members, selectedUserId, currentUserId, getCountForM
                 displayName={profile.display_name}
                 colorIndex={profile.avatar_color_index}
                 size={48}
-                ringColor={isSelected || profile.avatar_url ? accentColor : undefined}
+                ringColor={accentColor}
               />
               <View style={[styles.badge, { backgroundColor: accentColor }]}>
                 <Text style={styles.badgeText}>{done}/{total}</Text>

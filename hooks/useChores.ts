@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Chore, ChoreCompletion, ChoreWithCompletion, Frequency } from '@/types/database'
-import { getChoresForDay, isChoreCompleteForDate, sortChores } from '@/lib/chores'
+import { getChoresForDay, sortChores } from '@/lib/chores'
+import { scheduleChoreNotifications, cancelChoreNotifications, syncAllChoreNotifications } from '@/lib/scheduleChoreNotifications'
 
 export function useChores(houseId: string | undefined, selectedDate: string) {
   const [chores, setChores] = useState<Chore[]>([])
@@ -24,9 +25,12 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
       ? await supabase.from('chore_completions').select('*').in('chore_id', choreIds)
       : { data: [] }
 
-    setChores((choreData ?? []) as Chore[])
+    const typedChores = (choreData ?? []) as Chore[]
+    setChores(typedChores)
     setCompletions(completionData ?? [])
     setLoading(false)
+    // Re-sync local notifications whenever chores are refreshed
+    syncAllChoreNotifications(typedChores).catch(() => {})
   }, [houseId])
 
   useEffect(() => {
@@ -133,6 +137,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
     notes: string | null
     frequency: Frequency
     daysOfWeek: number[] | null
+    reminderTime: string | null
     houseId: string
     createdBy: string
   }): Promise<{ error: string | null }> {
@@ -143,6 +148,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
       notes: params.notes,
       frequency: params.frequency,
       days_of_week: params.daysOfWeek,
+      reminder_time: params.reminderTime,
       house_id: params.houseId,
       created_by: params.createdBy,
     })
@@ -159,6 +165,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
       notes?: string | null
       frequency?: Frequency
       daysOfWeek?: number[] | null
+      reminderTime?: string | null
     }
   ): Promise<{ error: string | null }> {
     const patch: Record<string, unknown> = {}
@@ -168,6 +175,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
     if (updates.notes !== undefined) patch.notes = updates.notes
     if (updates.frequency !== undefined) patch.frequency = updates.frequency
     if (updates.daysOfWeek !== undefined) patch.days_of_week = updates.daysOfWeek
+    if (updates.reminderTime !== undefined) patch.reminder_time = updates.reminderTime
     const { error } = await supabase.from('chores').update(patch).eq('id', choreId)
     if (!error) await fetchAll()
     return { error: error?.message ?? null }
@@ -175,7 +183,10 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
 
   async function deleteChore(choreId: string): Promise<{ error: string | null }> {
     const { error } = await supabase.from('chores').delete().eq('id', choreId)
-    if (!error) await fetchAll()
+    if (!error) {
+      cancelChoreNotifications(choreId).catch(() => {})
+      await fetchAll()
+    }
     return { error: error?.message ?? null }
   }
 
