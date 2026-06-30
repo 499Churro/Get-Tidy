@@ -89,6 +89,8 @@ export default function HomeScreen() {
     return { done: mc.filter(c => c.completion !== null).length, total: mc.length }
   }
 
+  const today = todayISO()
+
   function showPointPill(text: string) {
     setPillText(text)
     pillOpacity.setValue(1)
@@ -109,8 +111,6 @@ export default function HomeScreen() {
       await markDone(chore.id, session.user.id)
     }
   }
-
-  const today = todayISO()
   const allTodayChores = getChoresForSelectedDay()
   const allDoneCount = allTodayChores.filter(c => c.completion !== null).length
   const allTotal = allTodayChores.length
