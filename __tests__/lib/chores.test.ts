@@ -12,6 +12,7 @@ const baseChore: Chore = {
   frequency: 'daily',
   days_of_week: null,
   reminder_time: null,
+  archived_at: null,
   created_at: '2026-06-22T00:00:00Z',
 }
 

@@ -37,6 +37,7 @@ export interface Chore {
   frequency: Frequency
   days_of_week: number[] | null
   reminder_time: string | null
+  archived_at: string | null
   created_at: string
   assigned_profile?: Profile
 }
