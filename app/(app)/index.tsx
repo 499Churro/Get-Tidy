@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Animated } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFocusEffect } from 'expo-router'
@@ -16,6 +16,8 @@ import { getChoresForDay, getProgressDotColor, getMondayOfWeek } from '@/lib/cho
 import { ChoreWithCompletion } from '@/types/database'
 import { useTodayPoints } from '@/hooks/useTodayPoints'
 import { useStreak } from '@/hooks/useStreak'
+import { useHouseMomentum } from '@/hooks/useHouseMomentum'
+import { useMonthlyGoal } from '@/hooks/useMonthlyGoal'
 
 function todayISO() {
   const d = new Date()
@@ -33,10 +35,27 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const { todayPoints } = useTodayPoints(session?.user.id)
   const { currentStreak } = useStreak(session?.user.id)
+  const { momentum } = useHouseMomentum(house?.id)
+  const { goal } = useMonthlyGoal(house?.id)
 
   const pillOpacity = useRef(new Animated.Value(0)).current
   const pillY = useRef(new Animated.Value(0)).current
   const [pillText, setPillText] = useState<string | null>(null)
+  const progressAnim = useRef(new Animated.Value(0)).current
+  const starOpacity = useRef(new Animated.Value(0)).current
+  const starY = useRef(new Animated.Value(0)).current
+  const starScale = useRef(new Animated.Value(1)).current
+  const [showStar, setShowStar] = useState(false)
+
+  useEffect(() => {
+    if (!momentum || !goal) return
+    const pct = Math.min(100, Math.round((momentum.active_days / momentum.target_days) * 100))
+    Animated.timing(progressAnim, {
+      toValue: pct,
+      duration: 600,
+      useNativeDriver: false,
+    }).start()
+  }, [momentum?.active_days, momentum?.target_days, goal])
 
   useFocusEffect(useCallback(() => { refetch(); refetchHouse() }, [refetch, refetchHouse]))
 
@@ -92,6 +111,21 @@ export default function HomeScreen() {
 
   const today = todayISO()
 
+  function triggerStarAnimation() {
+    setShowStar(true)
+    starOpacity.setValue(1)
+    starY.setValue(0)
+    starScale.setValue(1.2)
+    Animated.parallel([
+      Animated.timing(starY, { toValue: -320, duration: 750, useNativeDriver: true }),
+      Animated.timing(starScale, { toValue: 0.2, duration: 750, useNativeDriver: true }),
+      Animated.sequence([
+        Animated.delay(550),
+        Animated.timing(starOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+      ]),
+    ]).start(() => setShowStar(false))
+  }
+
   function showPointPill(text: string) {
     setPillText(text)
     pillOpacity.setValue(1)
@@ -109,6 +143,7 @@ export default function HomeScreen() {
     } else {
       const isOverdue = !!chore.due_date && chore.due_date < today
       showPointPill(isOverdue ? '+15' : '+10')
+      triggerStarAnimation()
       await markDone(chore.id, session.user.id)
     }
   }
@@ -126,6 +161,17 @@ export default function HomeScreen() {
           <Text style={styles.headerName}>{profile?.display_name?.split(' ')[0] ?? 'there'}</Text>
         </View>
       </View>
+
+      {goal && (
+        <View style={styles.progressStrip}>
+          <Animated.View style={[styles.progressFill, {
+            width: progressAnim.interpolate({
+              inputRange: [0, 100],
+              outputRange: ['0%', '100%'],
+            }),
+          }]} />
+        </View>
+      )}
 
       <ScrollView
         style={styles.scroll}
@@ -251,6 +297,17 @@ export default function HomeScreen() {
           <Text style={styles.pointPillText}>{pillText}</Text>
         </Animated.View>
       )}
+      {showStar && (
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.starOverlay, {
+            opacity: starOpacity,
+            transform: [{ translateY: starY }, { scale: starScale }],
+          }]}
+        >
+          <Text style={styles.starText}>✦</Text>
+        </Animated.View>
+      )}
     </SafeAreaView>
   )
 }
@@ -337,4 +394,22 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   pointPillText: { fontSize: 22, fontFamily: Fonts.bold, color: '#fff' },
+  progressStrip: {
+    height: 4,
+    backgroundColor: Colors.surfaceContainerHigh,
+    width: '100%',
+  },
+  progressFill: {
+    height: 4,
+    backgroundColor: Colors.primary,
+  },
+  starOverlay: {
+    position: 'absolute',
+    bottom: 240,
+    alignSelf: 'center',
+  },
+  starText: {
+    fontSize: 32,
+    color: Colors.primary,
+  },
 })
