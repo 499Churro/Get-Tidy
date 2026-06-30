@@ -14,11 +14,15 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
     if (!houseId) { setLoading(false); return }
     setLoading(true)
 
+    const today = new Date()
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
     const { data: choreData } = await supabase
       .from('chores')
       .select('*, assigned_profile:profiles!assigned_to(*)')
       .eq('house_id', houseId)
       .is('archived_at', null)
+      .or(`due_date.is.null,due_date.gte.${todayStr}`)
 
     // Fetch all completions for chores in this house
     const choreIds = (choreData ?? []).map(c => c.id)
