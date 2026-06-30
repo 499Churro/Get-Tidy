@@ -34,7 +34,7 @@ export function useMonthlyGoal(houseId: string | undefined) {
     return () => { supabase.removeChannel(channel) }
   }, [houseId, fetch])
 
-  async function setGoalText(rewardText: string, targetPct = 90): Promise<{ error: string | null }> {
+  async function setGoalText(rewardText: string, targetPct = 90, targetDays = 20): Promise<{ error: string | null }> {
     if (!houseId) return { error: 'no house' }
     const { error } = await supabase
       .from('house_monthly_goals')
@@ -43,6 +43,8 @@ export function useMonthlyGoal(houseId: string | undefined) {
         month: currentMonthISO(),
         reward_text: rewardText,
         target_pct: targetPct,
+        goal_type: 'days',
+        target_days: targetDays,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'house_id,month' })
     if (!error) await fetch()

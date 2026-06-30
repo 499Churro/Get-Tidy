@@ -84,6 +84,8 @@ export interface HouseMonthlyGoal {
   month: string           // YYYY-MM-DD, first of month
   reward_text: string
   target_pct: number
+  goal_type: 'days' | 'percentage'
+  target_days: number
   created_at: string
   updated_at: string
 }
@@ -94,4 +96,7 @@ export interface HouseMomentum {
   momentum_pct: number
   reward_text: string | null
   target_pct: number
+  active_days: number
+  target_days: number
+  goal_type: 'days' | 'percentage'
 }
