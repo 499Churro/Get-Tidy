@@ -28,7 +28,7 @@ export function useHouseMomentum(houseId: string | undefined) {
     fetch()
     if (!houseId) return
     const channel = supabase
-      .channel(`momentum:${houseId}`)
+      .channel(`momentum:${houseId}:${Date.now()}`)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'chore_completions',
       }, fetch)

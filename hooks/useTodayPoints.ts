@@ -24,7 +24,7 @@ export function useTodayPoints(userId: string | undefined) {
     fetch()
     if (!userId) return
     const channel = supabase
-      .channel(`score_ledger:${userId}`)
+      .channel(`score_ledger:${userId}:${Date.now()}`)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'score_ledger',
         filter: `user_id=eq.${userId}`,

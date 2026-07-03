@@ -14,9 +14,12 @@ interface AvatarRowProps {
   currentUserId: string
   getCountForMember: (userId: string) => CountForMember
   onSelect: (userId: string | null) => void
+  todayPoints?: number
+  currentStreak?: number
+  goalIsSet?: boolean
 }
 
-export function AvatarRow({ members, selectedUserId, currentUserId, getCountForMember, onSelect }: AvatarRowProps) {
+export function AvatarRow({ members, selectedUserId, currentUserId, getCountForMember, onSelect, todayPoints, currentStreak, goalIsSet }: AvatarRowProps) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
       {members.map((member) => {
@@ -43,12 +46,19 @@ export function AvatarRow({ members, selectedUserId, currentUserId, getCountForM
                 ringColor={accentColor}
               />
               <View style={[styles.badge, { backgroundColor: accentColor }]}>
-                <Text style={styles.badgeText}>{done}/{total}</Text>
+                <Text style={styles.badgeText}>
+                  {isMe && goalIsSet && todayPoints !== undefined
+                    ? (todayPoints > 0 ? `+${todayPoints}` : '0')
+                    : `${done}/${total}`}
+                </Text>
               </View>
             </View>
             <Text style={styles.name} numberOfLines={1}>
               {isMe ? 'You' : profile.display_name.split(' ')[0]}
             </Text>
+            {isMe && currentStreak !== undefined && currentStreak > 0 && (
+              <Text style={styles.streak}>🔥 {currentStreak}</Text>
+            )}
           </TouchableOpacity>
         )
       })}
@@ -58,7 +68,7 @@ export function AvatarRow({ members, selectedUserId, currentUserId, getCountForM
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 16, paddingHorizontal: 20, paddingVertical: 4 },
-  item: { alignItems: 'center', gap: 4 },
+  item: { alignItems: 'center', gap: 4, minHeight: 88 },
   dimmed: { opacity: 0.35 },
   avatarWrap: { position: 'relative' },
   badge: {
@@ -75,4 +85,5 @@ const styles = StyleSheet.create({
   },
   badgeText: { fontSize: 9, fontFamily: Fonts.bold, color: '#fff' },
   name: { fontSize: 12, fontFamily: Fonts.bold, color: Colors.onSurfaceVariant, maxWidth: 52 },
+  streak: { fontSize: 11, fontFamily: Fonts.semibold, color: Colors.primary },
 })

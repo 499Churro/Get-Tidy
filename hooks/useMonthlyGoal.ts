@@ -25,7 +25,7 @@ export function useMonthlyGoal(houseId: string | undefined) {
     fetch()
     if (!houseId) return
     const channel = supabase
-      .channel(`monthly_goal:${houseId}`)
+      .channel(`monthly_goal:${houseId}:${Date.now()}`)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'house_monthly_goals',
         filter: `house_id=eq.${houseId}`,

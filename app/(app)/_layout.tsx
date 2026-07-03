@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialIcons } from '@expo/vector-icons'
+import { MomentumProvider } from '@/context/MomentumContext'
 
 type BottomTabBarProps = React.ComponentProps<typeof Tabs>['tabBar'] extends ((props: infer P) => unknown) | undefined ? P : never
 import { Colors, Fonts, Shadows } from '@/constants/theme'
@@ -47,14 +48,16 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
 export default function AppLayout() {
   return (
-    <Tabs
-      tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
-    >
-      <Tabs.Screen name="index" />
-      <Tabs.Screen name="chores" />
-      <Tabs.Screen name="house" />
-    </Tabs>
+    <MomentumProvider>
+      <Tabs
+        tabBar={(props) => <CustomTabBar {...props} />}
+        screenOptions={{ headerShown: false }}
+      >
+        <Tabs.Screen name="index" />
+        <Tabs.Screen name="chores" />
+        <Tabs.Screen name="house" />
+      </Tabs>
+    </MomentumProvider>
   )
 }
 

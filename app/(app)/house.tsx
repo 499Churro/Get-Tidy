@@ -7,8 +7,7 @@ import * as Updates from 'expo-updates'
 import { useFocusEffect } from 'expo-router'
 import { useAuth } from '@/hooks/useAuth'
 import { useHouse } from '@/hooks/useHouse'
-import { useHouseMomentum } from '@/hooks/useHouseMomentum'
-import { useMonthlyGoal } from '@/hooks/useMonthlyGoal'
+import { useMomentum } from '@/context/MomentumContext'
 import { Avatar } from '@/components/ui/Avatar'
 import { Colors, Fonts, Shadows, AvatarGradients, Radii } from '@/constants/theme'
 import { useUserAccent } from '@/context/UserAccentContext'
@@ -64,8 +63,7 @@ export default function HouseScreen() {
   const [goalEditing, setGoalEditing] = useState(false)
   const [targetDaysDraft, setTargetDaysDraft] = useState('20')
 
-  const { momentum, loading: momentumLoading } = useHouseMomentum(house?.id)
-  const { goal, setGoal: saveGoal } = useMonthlyGoal(house?.id)
+  const { momentum, loading: momentumLoading, goal, saveGoal } = useMomentum()
 
   const isOwner = house?.created_by === session?.user.id
 
@@ -245,24 +243,58 @@ export default function HouseScreen() {
                       <View style={[styles.meterFill, { width: `${Math.min(100, Math.round((momentum.active_days / momentum.target_days) * 100))}%` }]} />
                     </View>
                     {goalEditing ? (
-                      <TextInput
-                        style={[styles.modalInput, { marginTop: 4, marginBottom: 8 }]}
-                        value={goalDraft}
-                        onChangeText={setGoalDraft}
-                        placeholder="Reward text"
-                        placeholderTextColor={Colors.onSurfaceVariant}
-                        autoFocus
-                        returnKeyType="done"
-                        onSubmitEditing={() => {
-                          if (goalDraft.trim()) {
-                            void saveGoal(goalDraft.trim(), goal.target_pct, goal.target_days)
-                            setGoalEditing(false); setGoalDraft('')
-                          }
-                        }}
-                        onBlur={() => { setGoalEditing(false); setGoalDraft('') }}
-                      />
+                      <>
+                        <TextInput
+                          style={[styles.modalInput, { marginTop: 4, marginBottom: 10 }]}
+                          value={goalDraft}
+                          onChangeText={setGoalDraft}
+                          placeholder="Reward text"
+                          placeholderTextColor={Colors.onSurfaceVariant}
+                          autoFocus
+                          returnKeyType="next"
+                        />
+                        <View style={styles.daysRow}>
+                          <Text style={styles.daysLabel}>Active days target</Text>
+                          <TextInput
+                            style={[styles.modalInput, styles.daysInput]}
+                            value={targetDaysDraft}
+                            onChangeText={v => setTargetDaysDraft(v.replace(/[^0-9]/g, ''))}
+                            keyboardType="number-pad"
+                            maxLength={2}
+                            placeholder="20"
+                            placeholderTextColor={Colors.onSurfaceVariant}
+                            returnKeyType="done"
+                          />
+                        </View>
+                        <View style={styles.editGoalActions}>
+                          <TouchableOpacity
+                            style={[styles.shareBtn, { flex: 1, opacity: goalDraft.trim() ? 1 : 0.4 }]}
+                            disabled={!goalDraft.trim()}
+                            onPress={() => {
+                              if (!goalDraft.trim()) return
+                              const days = Math.min(31, Math.max(1, parseInt(targetDaysDraft) || 20))
+                              void saveGoal(goalDraft.trim(), goal.target_pct, days)
+                              setGoalEditing(false)
+                              setGoalDraft('')
+                            }}
+                            activeOpacity={0.8}
+                          >
+                            <Text style={styles.shareBtnText}>Save</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.cancelGoalBtn}
+                            onPress={() => { setGoalEditing(false); setGoalDraft('') }}
+                          >
+                            <Text style={styles.cancelGoalBtnText}>Cancel</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </>
                     ) : (
-                      <TouchableOpacity onPress={() => { setGoalDraft(goal.reward_text); setGoalEditing(true) }}>
+                      <TouchableOpacity onPress={() => {
+                        setGoalDraft(goal.reward_text)
+                        setTargetDaysDraft(goal.target_days.toString())
+                        setGoalEditing(true)
+                      }}>
                         <Text style={styles.meterLabel}>
                           {momentum.active_days} / {momentum.target_days} days — {goal.reward_text}
                         </Text>
@@ -594,4 +626,16 @@ const styles = StyleSheet.create({
   },
   daysLabel: { fontSize: 14, fontFamily: Fonts.semibold, color: Colors.onSurface },
   daysInput: { width: 72, textAlign: 'center' },
+  editGoalActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 14,
+  },
+  cancelGoalBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  cancelGoalBtnText: { fontSize: 14, fontFamily: Fonts.semibold, color: Colors.onSurfaceVariant },
 })

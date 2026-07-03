@@ -1,7 +1,10 @@
 import { createContext, useContext, useEffect, useState, ReactNode, createElement } from 'react'
 import { Session } from '@supabase/supabase-js'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '@/lib/supabase'
 import { Profile } from '@/types/database'
+
+const PROFILE_CACHE_KEY = 'tidy:cached_profile'
 
 interface AuthState {
   session: Session | null
@@ -30,11 +33,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select('*')
       .eq('id', s.user.id)
       .single()
-    setProfile(data)
+    if (data) {
+      setProfile(data)
+      AsyncStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(data)).catch(() => {})
+    }
     setLoading(false)
   }
 
   useEffect(() => {
+    // Restore cached profile immediately so the UI isn't blank on cold start
+    AsyncStorage.getItem(PROFILE_CACHE_KEY).then(raw => {
+      if (raw) {
+        try { setProfile(JSON.parse(raw)) } catch {}
+      }
+    }).catch(() => {})
+
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s)
       if (s) loadProfile(s)
@@ -44,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
       setSession(s)
       if (s) await loadProfile(s)
-      else { setProfile(null); setLoading(false) }
+      else { setProfile(null); setLoading(false); AsyncStorage.removeItem(PROFILE_CACHE_KEY).catch(() => {}) }
     })
     return () => subscription.unsubscribe()
   }, [])

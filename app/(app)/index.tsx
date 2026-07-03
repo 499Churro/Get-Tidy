@@ -16,8 +16,7 @@ import { getChoresForDay, getProgressDotColor, getMondayOfWeek } from '@/lib/cho
 import { ChoreWithCompletion } from '@/types/database'
 import { useTodayPoints } from '@/hooks/useTodayPoints'
 import { useStreak } from '@/hooks/useStreak'
-import { useHouseMomentum } from '@/hooks/useHouseMomentum'
-import { useMonthlyGoal } from '@/hooks/useMonthlyGoal'
+import { useMomentum } from '@/context/MomentumContext'
 
 function todayISO() {
   const d = new Date()
@@ -35,8 +34,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const { todayPoints } = useTodayPoints(session?.user.id)
   const { currentStreak } = useStreak(session?.user.id)
-  const { momentum } = useHouseMomentum(house?.id)
-  const { goal } = useMonthlyGoal(house?.id)
+  const { momentum, goal, refetch: refetchMomentum } = useMomentum()
 
   const pillOpacity = useRef(new Animated.Value(0)).current
   const pillY = useRef(new Animated.Value(0)).current
@@ -46,6 +44,7 @@ export default function HomeScreen() {
   const starY = useRef(new Animated.Value(0)).current
   const starScale = useRef(new Animated.Value(1)).current
   const [showStar, setShowStar] = useState(false)
+  const jarScale = useRef(new Animated.Value(1)).current
 
   useEffect(() => {
     if (!momentum || !goal) return
@@ -111,19 +110,27 @@ export default function HomeScreen() {
 
   const today = todayISO()
 
+  function bounceJar() {
+    jarScale.setValue(1)
+    Animated.sequence([
+      Animated.timing(jarScale, { toValue: 1.5, duration: 120, useNativeDriver: true }),
+      Animated.spring(jarScale, { toValue: 1, friction: 4, useNativeDriver: true }),
+    ]).start()
+  }
+
   function triggerStarAnimation() {
     setShowStar(true)
     starOpacity.setValue(1)
     starY.setValue(0)
     starScale.setValue(1.2)
     Animated.parallel([
-      Animated.timing(starY, { toValue: -320, duration: 750, useNativeDriver: true }),
-      Animated.timing(starScale, { toValue: 0.2, duration: 750, useNativeDriver: true }),
+      Animated.timing(starY, { toValue: -400, duration: 750, useNativeDriver: true }),
+      Animated.timing(starScale, { toValue: 0.1, duration: 750, useNativeDriver: true }),
       Animated.sequence([
-        Animated.delay(550),
-        Animated.timing(starOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+        Animated.delay(620),
+        Animated.timing(starOpacity, { toValue: 0, duration: 130, useNativeDriver: true }),
       ]),
-    ]).start(() => setShowStar(false))
+    ]).start(() => { setShowStar(false); bounceJar() })
   }
 
   function showPointPill(text: string) {
@@ -140,6 +147,7 @@ export default function HomeScreen() {
     if (!session?.user.id) return
     if (chore.completion !== null) {
       await undoMarkDone(chore.id)
+      void refetchMomentum()
     } else {
       const isOverdue = !!chore.due_date && chore.due_date < today
       showPointPill(isOverdue ? '+15' : '+10')
@@ -162,14 +170,29 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {goal && (
-        <View style={styles.progressStrip}>
-          <Animated.View style={[styles.progressFill, {
-            width: progressAnim.interpolate({
-              inputRange: [0, 100],
-              outputRange: ['0%', '100%'],
-            }),
-          }]} />
+      {goal && momentum && (
+        <View style={styles.progressCard}>
+          <View style={styles.progressCardTop}>
+            <Text style={styles.progressCardLabel} numberOfLines={1}>
+              {goal.reward_text}
+            </Text>
+            <View style={styles.progressCardRight}>
+              <Text style={styles.progressCardDays}>
+                {momentum.active_days}/{momentum.target_days} days
+              </Text>
+              <Animated.View style={[styles.pointJar, { transform: [{ scale: jarScale }] }]}>
+                <Text style={styles.pointJarText}>⭐</Text>
+              </Animated.View>
+            </View>
+          </View>
+          <View style={styles.progressStrip}>
+            <Animated.View style={[styles.progressFill, {
+              width: progressAnim.interpolate({
+                inputRange: [0, 100],
+                outputRange: ['0%', '100%'],
+              }),
+            }]} />
+          </View>
         </View>
       )}
 
@@ -190,18 +213,11 @@ export default function HomeScreen() {
         </View>
 
         {/* Rhythm Strip */}
-        {(currentStreak > 0 || todayPoints > 0) && (
+        {currentStreak > 0 && (
           <View style={styles.rhythmStrip}>
-            {currentStreak > 0 && (
-              <View style={styles.rhythmChip}>
-                <Text style={styles.rhythmChipText}>{currentStreak} days steady</Text>
-              </View>
-            )}
-            {todayPoints > 0 && (
-              <View style={[styles.rhythmChip, styles.rhythmChipPoints]}>
-                <Text style={[styles.rhythmChipText, styles.rhythmChipTextPoints]}>+{todayPoints} today</Text>
-              </View>
-            )}
+            <View style={styles.rhythmChip}>
+              <Text style={styles.rhythmChipText}>{currentStreak} days steady</Text>
+            </View>
           </View>
         )}
 
@@ -214,6 +230,9 @@ export default function HomeScreen() {
               currentUserId={session?.user.id ?? ''}
               getCountForMember={getCountForMember}
               onSelect={setSelectedUserId}
+              todayPoints={todayPoints}
+              currentStreak={currentStreak}
+              goalIsSet={!!goal}
             />
           </View>
         )}
@@ -394,15 +413,58 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   pointPillText: { fontSize: 22, fontFamily: Fonts.bold, color: '#fff' },
+  progressCard: {
+    backgroundColor: Colors.surfaceContainerLowest,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.surfaceContainerHigh,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 0,
+  },
+  progressCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  progressCardLabel: {
+    fontSize: 13,
+    fontFamily: Fonts.semibold,
+    color: Colors.onSurface,
+    flex: 1,
+    marginRight: 8,
+  },
+  progressCardRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  progressCardDays: {
+    fontSize: 12,
+    fontFamily: Fonts.bold,
+    color: Colors.primary,
+  },
   progressStrip: {
-    height: 4,
+    height: 6,
     backgroundColor: Colors.surfaceContainerHigh,
-    width: '100%',
+    borderRadius: 999,
+    overflow: 'hidden',
+    marginBottom: 8,
   },
   progressFill: {
-    height: 4,
+    height: 6,
     backgroundColor: Colors.primary,
+    borderRadius: 999,
   },
+  pointJar: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: Colors.primaryContainer,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pointJarText: { fontSize: 13 },
   starOverlay: {
     position: 'absolute',
     bottom: 240,
