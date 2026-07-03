@@ -14,12 +14,10 @@ interface AvatarRowProps {
   currentUserId: string
   getCountForMember: (userId: string) => CountForMember
   onSelect: (userId: string | null) => void
-  todayPoints?: number
   currentStreak?: number
-  goalIsSet?: boolean
 }
 
-export function AvatarRow({ members, selectedUserId, currentUserId, getCountForMember, onSelect, todayPoints, currentStreak, goalIsSet }: AvatarRowProps) {
+export function AvatarRow({ members, selectedUserId, currentUserId, getCountForMember, onSelect, currentStreak }: AvatarRowProps) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
       {members.map((member) => {
@@ -46,11 +44,7 @@ export function AvatarRow({ members, selectedUserId, currentUserId, getCountForM
                 ringColor={accentColor}
               />
               <View style={[styles.badge, { backgroundColor: accentColor }]}>
-                <Text style={styles.badgeText}>
-                  {isMe && goalIsSet && todayPoints !== undefined
-                    ? (todayPoints > 0 ? `+${todayPoints}` : '0')
-                    : `${done}/${total}`}
-                </Text>
+                <Text style={styles.badgeText}>{done}/{total}</Text>
               </View>
             </View>
             <Text style={styles.name} numberOfLines={1}>

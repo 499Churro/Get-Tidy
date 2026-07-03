@@ -36,7 +36,13 @@ export function MomentumProvider({ children }: { children: ReactNode }) {
   }, [session?.user.id])
 
   const { momentum, loading, refetch } = useHouseMomentum(houseId)
-  const { goal, setGoal: saveGoal } = useMonthlyGoal(houseId)
+  const { goal, setGoal } = useMonthlyGoal(houseId)
+
+  async function saveGoal(rewardText: string, targetPct?: number, targetDays?: number) {
+    const result = await setGoal(rewardText, targetPct, targetDays)
+    if (!result.error) await refetch()
+    return result
+  }
 
   return createElement(MomentumContext.Provider, { value: { momentum, goal, loading, refetch, saveGoal } }, children)
 }

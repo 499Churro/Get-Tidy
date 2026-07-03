@@ -8,6 +8,7 @@ import { useFocusEffect } from 'expo-router'
 import { useAuth } from '@/hooks/useAuth'
 import { useHouse } from '@/hooks/useHouse'
 import { useMomentum } from '@/context/MomentumContext'
+import { usePersonalMomentum } from '@/hooks/usePersonalMomentum'
 import { Avatar } from '@/components/ui/Avatar'
 import { Colors, Fonts, Shadows, AvatarGradients, Radii } from '@/constants/theme'
 import { useUserAccent } from '@/context/UserAccentContext'
@@ -35,8 +36,10 @@ export default function HouseScreen() {
   const { session, profile, updateProfile, refreshProfile } = useAuth()
   const { house, members, loading: houseLoading, leaveHouse, refetch: refetchHouse } = useHouse(session?.user.id)
   const [refreshing, setRefreshing] = useState(false)
+  const { momentum, loading: momentumLoading, goal, saveGoal } = useMomentum()
+  const { momentum: personalMomentum, loading: personalLoading, refetch: refetchPersonal, savePersonalGoal } = usePersonalMomentum(house?.id, session?.user.id)
 
-  useFocusEffect(useCallback(() => { refetchHouse(); refreshProfile() }, [refetchHouse, refreshProfile]))
+  useFocusEffect(useCallback(() => { refetchHouse(); refreshProfile(); refetchPersonal() }, [refetchHouse, refreshProfile, refetchPersonal]))
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
@@ -62,8 +65,9 @@ export default function HouseScreen() {
   const [goalDraft, setGoalDraft] = useState('')
   const [goalEditing, setGoalEditing] = useState(false)
   const [targetDaysDraft, setTargetDaysDraft] = useState('20')
-
-  const { momentum, loading: momentumLoading, goal, saveGoal } = useMomentum()
+  const [personalGoalDraft, setPersonalGoalDraft] = useState('')
+  const [personalGoalEditing, setPersonalGoalEditing] = useState(false)
+  const [personalTargetDaysDraft, setPersonalTargetDaysDraft] = useState('20')
 
   const isOwner = house?.created_by === session?.user.id
 
@@ -182,7 +186,7 @@ export default function HouseScreen() {
         {/* Monthly Momentum */}
         {house && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>This Month</Text>
+            <Text style={styles.sectionTitle}>House goal</Text>
             {!goal ? (
               <View style={styles.card}>
                 <Text style={styles.goalEmptyTitle}>Set a house goal</Text>
@@ -199,7 +203,7 @@ export default function HouseScreen() {
                   returnKeyType="done"
                   onSubmitEditing={() => {
                     if (goalDraft.trim()) {
-                      const days = Math.min(31, Math.max(1, parseInt(targetDaysDraft) || 20))
+                      const days = Math.max(1, parseInt(targetDaysDraft) || 20)
                       void saveGoal(goalDraft.trim(), 90, days)
                       setGoalDraft('')
                       setTargetDaysDraft('20')
@@ -213,7 +217,7 @@ export default function HouseScreen() {
                     value={targetDaysDraft}
                     onChangeText={v => setTargetDaysDraft(v.replace(/[^0-9]/g, ''))}
                     keyboardType="number-pad"
-                    maxLength={2}
+                    maxLength={4}
                     placeholder="20"
                     placeholderTextColor={Colors.onSurfaceVariant}
                     returnKeyType="done"
@@ -223,7 +227,7 @@ export default function HouseScreen() {
                   style={[styles.shareBtn, { marginTop: 12, opacity: goalDraft.trim() ? 1 : 0.4 }]}
                   disabled={!goalDraft.trim()}
                   onPress={() => {
-                    const days = Math.min(31, Math.max(1, parseInt(targetDaysDraft) || 20))
+                    const days = Math.max(1, parseInt(targetDaysDraft) || 20)
                     void saveGoal(goalDraft.trim(), 90, days)
                     setGoalDraft('')
                     setTargetDaysDraft('20')
@@ -235,9 +239,7 @@ export default function HouseScreen() {
               </View>
             ) : (
               <View style={styles.card}>
-                {momentumLoading ? (
-                  <ActivityIndicator color={Colors.primary} />
-                ) : momentum ? (
+                {momentum ? (
                   <>
                     <View style={styles.meterTrack}>
                       <View style={[styles.meterFill, { width: `${Math.min(100, Math.round((momentum.active_days / momentum.target_days) * 100))}%` }]} />
@@ -260,7 +262,7 @@ export default function HouseScreen() {
                             value={targetDaysDraft}
                             onChangeText={v => setTargetDaysDraft(v.replace(/[^0-9]/g, ''))}
                             keyboardType="number-pad"
-                            maxLength={2}
+                            maxLength={4}
                             placeholder="20"
                             placeholderTextColor={Colors.onSurfaceVariant}
                             returnKeyType="done"
@@ -272,7 +274,7 @@ export default function HouseScreen() {
                             disabled={!goalDraft.trim()}
                             onPress={() => {
                               if (!goalDraft.trim()) return
-                              const days = Math.min(31, Math.max(1, parseInt(targetDaysDraft) || 20))
+                              const days = Math.max(1, parseInt(targetDaysDraft) || 20)
                               void saveGoal(goalDraft.trim(), goal.target_pct, days)
                               setGoalEditing(false)
                               setGoalDraft('')
@@ -302,6 +304,144 @@ export default function HouseScreen() {
                     )}
                     <Text style={styles.recapCopy}>{getRecapCopy(momentum)}</Text>
                   </>
+                ) : momentumLoading ? (
+                  <ActivityIndicator color={Colors.primary} />
+                ) : null}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Personal goal — only visible to the current user */}
+        {house && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Your goal</Text>
+            {!personalMomentum?.has_goal ? (
+              <View style={styles.card}>
+                <Text style={styles.goalEmptyTitle}>Set a personal goal</Text>
+                <Text style={styles.goalEmptyBody}>
+                  Track your own momentum with a private reward — only you can see and add to it.
+                </Text>
+                <TextInput
+                  style={[styles.modalInput, { marginTop: 14 }]}
+                  value={personalGoalDraft}
+                  onChangeText={setPersonalGoalDraft}
+                  placeholder="e.g. Treat myself to coffee"
+                  placeholderTextColor={Colors.onSurfaceVariant}
+                  autoCapitalize="sentences"
+                  returnKeyType="done"
+                  onSubmitEditing={() => {
+                    if (personalGoalDraft.trim()) {
+                      const days = Math.max(1, parseInt(personalTargetDaysDraft) || 20)
+                      void savePersonalGoal(personalGoalDraft.trim(), days)
+                      setPersonalGoalDraft('')
+                      setPersonalTargetDaysDraft('20')
+                    }
+                  }}
+                />
+                <View style={styles.daysRow}>
+                  <Text style={styles.daysLabel}>Active days target</Text>
+                  <TextInput
+                    style={[styles.modalInput, styles.daysInput]}
+                    value={personalTargetDaysDraft}
+                    onChangeText={v => setPersonalTargetDaysDraft(v.replace(/[^0-9]/g, ''))}
+                    keyboardType="number-pad"
+                    maxLength={4}
+                    placeholder="20"
+                    placeholderTextColor={Colors.onSurfaceVariant}
+                    returnKeyType="done"
+                  />
+                </View>
+                <TouchableOpacity
+                  style={[styles.shareBtn, { marginTop: 12, opacity: personalGoalDraft.trim() ? 1 : 0.4 }]}
+                  disabled={!personalGoalDraft.trim()}
+                  onPress={() => {
+                    const days = Math.max(1, parseInt(personalTargetDaysDraft) || 20)
+                    void savePersonalGoal(personalGoalDraft.trim(), days)
+                    setPersonalGoalDraft('')
+                    setPersonalTargetDaysDraft('20')
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.shareBtnText}>Set goal</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.card}>
+                {personalMomentum ? (
+                  <>
+                    <View style={styles.meterTrack}>
+                      <View style={[styles.meterFill, { width: `${Math.min(100, Math.round((personalMomentum.active_days / personalMomentum.target_days) * 100))}%` }]} />
+                    </View>
+                    {personalGoalEditing ? (
+                      <>
+                        <TextInput
+                          style={[styles.modalInput, { marginTop: 4, marginBottom: 10 }]}
+                          value={personalGoalDraft}
+                          onChangeText={setPersonalGoalDraft}
+                          placeholder="Reward text"
+                          placeholderTextColor={Colors.onSurfaceVariant}
+                          autoFocus
+                          returnKeyType="next"
+                        />
+                        <View style={styles.daysRow}>
+                          <Text style={styles.daysLabel}>Active days target</Text>
+                          <TextInput
+                            style={[styles.modalInput, styles.daysInput]}
+                            value={personalTargetDaysDraft}
+                            onChangeText={v => setPersonalTargetDaysDraft(v.replace(/[^0-9]/g, ''))}
+                            keyboardType="number-pad"
+                            maxLength={4}
+                            placeholder="20"
+                            placeholderTextColor={Colors.onSurfaceVariant}
+                            returnKeyType="done"
+                          />
+                        </View>
+                        <View style={styles.editGoalActions}>
+                          <TouchableOpacity
+                            style={[styles.shareBtn, { flex: 1, opacity: personalGoalDraft.trim() ? 1 : 0.4 }]}
+                            disabled={!personalGoalDraft.trim()}
+                            onPress={() => {
+                              if (!personalGoalDraft.trim()) return
+                              const days = Math.max(1, parseInt(personalTargetDaysDraft) || 20)
+                              void savePersonalGoal(personalGoalDraft.trim(), days)
+                              setPersonalGoalEditing(false)
+                              setPersonalGoalDraft('')
+                            }}
+                            activeOpacity={0.8}
+                          >
+                            <Text style={styles.shareBtnText}>Save</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.cancelGoalBtn}
+                            onPress={() => { setPersonalGoalEditing(false); setPersonalGoalDraft('') }}
+                          >
+                            <Text style={styles.cancelGoalBtnText}>Cancel</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </>
+                    ) : (
+                      <TouchableOpacity onPress={() => {
+                        setPersonalGoalDraft(personalMomentum.reward_text ?? '')
+                        setPersonalTargetDaysDraft(personalMomentum.target_days.toString())
+                        setPersonalGoalEditing(true)
+                      }}>
+                        <Text style={styles.meterLabel}>
+                          {personalMomentum.active_days} / {personalMomentum.target_days} days
+                          {personalMomentum.reward_text ? ` — ${personalMomentum.reward_text}` : ''}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                    <Text style={styles.recapCopy}>
+                      {personalMomentum.active_days >= personalMomentum.target_days
+                        ? personalMomentum.reward_text ? `${personalMomentum.reward_text} unlocked. Well done.` : 'Goal reached. Well done.'
+                        : personalMomentum.reward_text
+                          ? `${personalMomentum.active_days} days in. ${personalMomentum.reward_text} is in reach.`
+                          : `${personalMomentum.active_days} days in this month.`}
+                    </Text>
+                  </>
+                ) : personalLoading ? (
+                  <ActivityIndicator color={Colors.primary} />
                 ) : null}
               </View>
             )}

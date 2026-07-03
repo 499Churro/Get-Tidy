@@ -100,3 +100,10 @@ export interface HouseMomentum {
   target_days: number
   goal_type: 'days' | 'percentage'
 }
+
+export interface PersonalMomentum {
+  active_days: number
+  target_days: number
+  reward_text: string | null
+  has_goal: boolean
+}
