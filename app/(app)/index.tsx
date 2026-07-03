@@ -17,17 +17,13 @@ import { ChoreWithCompletion } from '@/types/database'
 import { useTodayPoints } from '@/hooks/useTodayPoints'
 import { useStreak } from '@/hooks/useStreak'
 import { useMomentum } from '@/context/MomentumContext'
-
-function todayISO() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
+import { todayLocalISO } from '@/lib/dateUtils'
 
 export default function HomeScreen() {
   const { accentColor } = useUserAccent()
   const { session, profile, refreshProfile } = useAuth()
   const { house, members, refetch: refetchHouse } = useHouse(session?.user.id)
-  const [selectedDate, setSelectedDate] = useState(todayISO())
+  const [selectedDate, setSelectedDate] = useState(todayLocalISO())
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
   const { chores, completions, getChoresForSelectedDay, markDone, undoMarkDone, refetch } = useChores(house?.id, selectedDate)
@@ -108,7 +104,7 @@ export default function HomeScreen() {
     return { done: mc.filter(c => c.completion !== null).length, total: mc.length }
   }
 
-  const today = todayISO()
+  const today = todayLocalISO()
 
   function bounceJar() {
     jarScale.setValue(1)

@@ -12,6 +12,7 @@ import { AddChoreSheet } from '@/components/chores/AddChoreSheet'
 import { Colors, Fonts, Shadows, AvatarGradients } from '@/constants/theme'
 import { useUserAccent } from '@/context/UserAccentContext'
 import { Chore, Frequency } from '@/types/database'
+import { todayLocalISO } from '@/lib/dateUtils'
 
 const FREQ_LABEL: Record<Frequency, string> = {
   daily: 'Daily',
@@ -41,10 +42,6 @@ function formatDays(days: number[] | null): string {
   return days.map(d => DAY_LABELS[d]).join(' · ')
 }
 
-function todayISO() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 export default function ChoresManagerScreen() {
   const { accentGradient } = useUserAccent()
@@ -53,7 +50,7 @@ export default function ChoresManagerScreen() {
   const sheetRef = useRef<BottomSheet>(null)
   const [editingChore, setEditingChore] = useState<Chore | null>(null)
 
-  const { chores, addChore, updateChore, deleteChore, refetch } = useChores(house?.id, todayISO())
+  const { chores, addChore, updateChore, deleteChore, refetch } = useChores(house?.id, todayLocalISO())
   const [refreshing, setRefreshing] = useState(false)
 
   useFocusEffect(useCallback(() => { refetch() }, [refetch]))
