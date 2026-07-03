@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { Chore, ChoreCompletion, ChoreWithCompletion, Frequency } from '@/types/database'
 import { getChoresForDay, sortChores } from '@/lib/chores'
 import { scheduleChoreNotifications, cancelChoreNotifications, syncAllChoreNotifications } from '@/lib/scheduleChoreNotifications'
+import { offsetDate } from '@/lib/dateUtils'
 
 export function useChores(houseId: string | undefined, selectedDate: string) {
   const [chores, setChores] = useState<Chore[]>([])
@@ -24,10 +25,16 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
       .is('archived_at', null)
       .or(`due_date.is.null,due_date.gte.${todayStr}`)
 
-    // Fetch all completions for chores in this house
     const choreIds = (choreData ?? []).map(c => c.id)
+    const windowStart = offsetDate(selectedDate, -7)
+    const windowEnd   = offsetDate(selectedDate,  7)
     const { data: completionData } = choreIds.length > 0
-      ? await supabase.from('chore_completions').select('*').in('chore_id', choreIds)
+      ? await supabase
+          .from('chore_completions')
+          .select('*')
+          .in('chore_id', choreIds)
+          .gte('for_date', windowStart)
+          .lte('for_date', windowEnd)
       : { data: [] }
 
     const typedChores = (choreData ?? []) as Chore[]
@@ -36,7 +43,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
     setLoading(false)
     // Re-sync local notifications whenever chores are refreshed
     syncAllChoreNotifications(typedChores).catch(() => {})
-  }, [houseId])
+  }, [houseId, selectedDate])
 
   useEffect(() => {
     fetchAll()
