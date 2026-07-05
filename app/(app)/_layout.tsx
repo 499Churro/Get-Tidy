@@ -12,7 +12,7 @@ type IconName = React.ComponentProps<typeof MaterialIcons>['name']
 const TAB_CONFIG: Record<string, { label: string; icon: IconName }> = {
   index: { label: 'Home', icon: 'home' },
   chores: { label: 'Chores', icon: 'checklist' },
-  house: { label: 'House', icon: 'people' },
+  store: { label: 'Store', icon: 'storefront' },
 }
 
 function CustomTabBar({ state, navigation }: BottomTabBarProps) {
@@ -55,7 +55,7 @@ export default function AppLayout() {
       >
         <Tabs.Screen name="index" />
         <Tabs.Screen name="chores" />
-        <Tabs.Screen name="house" />
+        <Tabs.Screen name="store" />
       </Tabs>
     </MomentumProvider>
   )
