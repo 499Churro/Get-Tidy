@@ -46,7 +46,6 @@ create or replace function public.change_member_role(
 returns void language plpgsql security definer set search_path = public as $$
 declare
   v_caller      uuid := auth.uid();
-  v_house_id    uuid;
   v_admin_count int;
 begin
   if v_caller is null then raise exception 'not authenticated'; end if;
@@ -57,13 +56,12 @@ begin
     select 1 from public.house_members
     where house_id = p_house_id and user_id = v_caller and role = 'admin'
   ) then raise exception 'not authorized'; end if;
-  v_house_id := p_house_id;
 
   if p_new_role = 'member' then
     perform pg_advisory_xact_lock(hashtext(p_house_id::text));
     select count(*) into v_admin_count
     from public.house_members
-    where house_id = v_house_id and role = 'admin' and user_id != p_target_user_id;
+    where house_id = p_house_id and role = 'admin' and user_id != p_target_user_id;
     if v_admin_count = 0 then
       raise exception 'cannot remove the last admin';
     end if;
@@ -71,7 +69,7 @@ begin
 
   update public.house_members
   set role = p_new_role
-  where house_id = v_house_id and user_id = p_target_user_id;
+  where house_id = p_house_id and user_id = p_target_user_id;
 end;
 $$;
 
@@ -83,7 +81,6 @@ create or replace function public.remove_member(
 returns void language plpgsql security definer set search_path = public as $$
 declare
   v_caller      uuid := auth.uid();
-  v_house_id    uuid;
   v_target_role text;
   v_admin_count int;
 begin
@@ -93,23 +90,23 @@ begin
     select 1 from public.house_members
     where house_id = p_house_id and user_id = v_caller and role = 'admin'
   ) then raise exception 'not authorized'; end if;
-  v_house_id := p_house_id;
+
+  perform pg_advisory_xact_lock(hashtext(p_house_id::text));
 
   select role into v_target_role
   from public.house_members
-  where house_id = v_house_id and user_id = p_target_user_id;
+  where house_id = p_house_id and user_id = p_target_user_id;
 
   if v_target_role = 'admin' then
-    perform pg_advisory_xact_lock(hashtext(p_house_id::text));
     select count(*) into v_admin_count
     from public.house_members
-    where house_id = v_house_id and role = 'admin' and user_id != p_target_user_id;
+    where house_id = p_house_id and role = 'admin' and user_id != p_target_user_id;
     if v_admin_count = 0 then
       raise exception 'cannot remove the last admin';
     end if;
   end if;
 
   delete from public.house_members
-  where house_id = v_house_id and user_id = p_target_user_id;
+  where house_id = p_house_id and user_id = p_target_user_id;
 end;
 $$;
