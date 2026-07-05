@@ -60,14 +60,13 @@ export function useHouse(userId: string | undefined) {
   }
 
   async function leaveHouse(): Promise<{ error: string | null }> {
-    if (house) {
-      await supabase
-        .from('chores')
-        .update({ assigned_to: null })
-        .eq('house_id', house.id)
-        .eq('assigned_to', userId)
-    }
-    const { error } = await supabase.from('house_members').delete().eq('user_id', userId)
+    if (!house) return { error: 'No house to leave.' }
+    await supabase
+      .from('chores')
+      .update({ assigned_to: null })
+      .eq('house_id', house.id)
+      .eq('assigned_to', userId)
+    const { error } = await supabase.rpc('leave_house', { p_house_id: house.id })
     if (!error) {
       notifyHouseMembershipChanged()
       await fetchHouse()
