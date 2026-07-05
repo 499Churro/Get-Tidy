@@ -11,6 +11,8 @@ import { WeekStrip } from '@/components/chores/WeekStrip'
 import { AvatarRow } from '@/components/chores/AvatarRow'
 import { HeroCard } from '@/components/chores/HeroCard'
 import { TidyLogo } from '@/components/ui/TidyLogo'
+import { MaterialIcons } from '@expo/vector-icons'
+import { HouseSettingsSheet } from '@/components/house/HouseSettingsSheet'
 import { Colors, Fonts, Shadows, AvatarGradients } from '@/constants/theme'
 import { useUserAccent } from '@/context/UserAccentContext'
 import { getChoresForDay, getProgressDotColor, getMondayOfWeek } from '@/lib/chores'
@@ -106,6 +108,7 @@ export default function HomeScreen() {
   const { house, members, refetch: refetchHouse } = useHouse(session?.user.id)
   const [selectedDate, setSelectedDate] = useState(todayLocalISO())
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const { chores, completions, getChoresForSelectedDay, markDone, undoMarkDone, refetch } = useChores(house?.id, selectedDate)
   const [refreshing, setRefreshing] = useState(false)
@@ -338,6 +341,12 @@ export default function HomeScreen() {
           <Text style={styles.headerTitle}>Welcome back,</Text>
           <Text style={styles.headerName}>{profile?.display_name?.split(' ')[0] ?? 'there'}</Text>
         </View>
+        <TouchableOpacity
+          onPress={() => setSettingsOpen(true)}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <MaterialIcons name="settings" size={22} color={Colors.onSurfaceVariant} />
+        </TouchableOpacity>
       </View>
 
       {goal && momentum && (
@@ -523,6 +532,8 @@ export default function HomeScreen() {
           <Text style={styles.allDoneToastText}>{allDoneMessage}</Text>
         </Animated.View>
       )}
+
+      <HouseSettingsSheet visible={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </SafeAreaView>
   )
 }

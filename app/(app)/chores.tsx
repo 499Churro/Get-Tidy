@@ -9,6 +9,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { useHouse } from '@/hooks/useHouse'
 import { useChores } from '@/hooks/useChores'
 import { AddChoreSheet } from '@/components/chores/AddChoreSheet'
+import { HouseSettingsSheet } from '@/components/house/HouseSettingsSheet'
+import { MaterialIcons } from '@expo/vector-icons'
 import { Colors, Fonts, Shadows, AvatarGradients } from '@/constants/theme'
 import { useUserAccent } from '@/context/UserAccentContext'
 import { Chore, Frequency } from '@/types/database'
@@ -52,6 +54,7 @@ export default function ChoresManagerScreen() {
 
   const { chores, addChore, updateChore, deleteChore, refetch } = useChores(house?.id, todayLocalISO())
   const [refreshing, setRefreshing] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   useFocusEffect(useCallback(() => { refetch() }, [refetch]))
 
@@ -137,6 +140,12 @@ export default function ChoresManagerScreen() {
           <Text style={styles.greetSub}>Welcome back,</Text>
           <Text style={styles.greetName}>{profile?.display_name?.split(' ')[0] ?? 'there'}</Text>
         </View>
+        <TouchableOpacity
+          onPress={() => setSettingsOpen(true)}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <MaterialIcons name="settings" size={22} color={Colors.onSurfaceVariant} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -239,6 +248,8 @@ export default function ChoresManagerScreen() {
           }}
         />
       )}
+
+      <HouseSettingsSheet visible={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </SafeAreaView>
   )
 }
