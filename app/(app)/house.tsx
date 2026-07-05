@@ -13,23 +13,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Colors, Fonts, Shadows, AvatarGradients, Radii } from '@/constants/theme'
 import { useUserAccent } from '@/context/UserAccentContext'
 import { supabase } from '@/lib/supabase'
-import { HouseMomentum } from '@/types/database'
-
-
-function getRecapCopy(m: HouseMomentum): string {
-  const remaining = m.target_days - m.active_days
-  if (m.active_days >= m.target_days) {
-    return m.reward_text ? `${m.reward_text} unlocked. Well done.` : 'Goal reached. Well done.'
-  }
-  if (remaining <= 3) {
-    return m.reward_text
-      ? `So close — ${remaining} more day${remaining === 1 ? '' : 's'} to ${m.reward_text}.`
-      : `${remaining} more day${remaining === 1 ? '' : 's'} to go.`
-  }
-  return m.reward_text
-    ? `${m.active_days} days in. ${m.reward_text} is in reach.`
-    : `${m.active_days} days in this month.`
-}
+import { getRecapCopy } from '@/lib/houseMomentum'
 
 export default function HouseScreen() {
   const { accentColor } = useUserAccent()
@@ -201,10 +185,11 @@ export default function HouseScreen() {
                   placeholderTextColor={Colors.onSurfaceVariant}
                   autoCapitalize="sentences"
                   returnKeyType="done"
-                  onSubmitEditing={() => {
+                  onSubmitEditing={async () => {
                     if (goalDraft.trim()) {
                       const days = Math.max(1, parseInt(targetDaysDraft) || 20)
-                      void saveGoal(goalDraft.trim(), 90, days)
+                      const { error } = await saveGoal(goalDraft.trim(), 90, days)
+                      if (error) Alert.alert('Error', error)
                       setGoalDraft('')
                       setTargetDaysDraft('20')
                     }
@@ -226,9 +211,10 @@ export default function HouseScreen() {
                 <TouchableOpacity
                   style={[styles.shareBtn, { marginTop: 12, opacity: goalDraft.trim() ? 1 : 0.4 }]}
                   disabled={!goalDraft.trim()}
-                  onPress={() => {
+                  onPress={async () => {
                     const days = Math.max(1, parseInt(targetDaysDraft) || 20)
-                    void saveGoal(goalDraft.trim(), 90, days)
+                    const { error } = await saveGoal(goalDraft.trim(), 90, days)
+                    if (error) Alert.alert('Error', error)
                     setGoalDraft('')
                     setTargetDaysDraft('20')
                   }}
@@ -272,10 +258,11 @@ export default function HouseScreen() {
                           <TouchableOpacity
                             style={[styles.shareBtn, { flex: 1, opacity: goalDraft.trim() ? 1 : 0.4 }]}
                             disabled={!goalDraft.trim()}
-                            onPress={() => {
+                            onPress={async () => {
                               if (!goalDraft.trim()) return
                               const days = Math.max(1, parseInt(targetDaysDraft) || 20)
-                              void saveGoal(goalDraft.trim(), goal.target_pct, days)
+                              const { error } = await saveGoal(goalDraft.trim(), goal.target_pct, days)
+                              if (error) { Alert.alert('Error', error); return }
                               setGoalEditing(false)
                               setGoalDraft('')
                             }}
