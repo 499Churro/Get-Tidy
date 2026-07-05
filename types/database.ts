@@ -22,6 +22,7 @@ export interface HouseMember {
   id: string
   house_id: string
   user_id: string
+  role: 'admin' | 'member'
   joined_at: string
   profile?: Profile
 }
@@ -52,22 +53,6 @@ export interface ChoreCompletion {
 
 export interface ChoreWithCompletion extends Chore {
   completion: ChoreCompletion | null
-}
-
-export type ScoreLedgerEventType =
-  | 'chore_completion'
-  | 'chore_completion_reversal'
-  | 'streak_bonus'
-
-export interface ScoreLedgerEntry {
-  id: string
-  user_id: string
-  house_id: string
-  event_type: ScoreLedgerEventType
-  points: number
-  chore_id: string | null
-  for_date: string        // YYYY-MM-DD
-  created_at: string
 }
 
 export interface UserStreak {
