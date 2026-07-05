@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import BottomSheet from '@gorhom/bottom-sheet'
 import { useAuth } from '@/hooks/useAuth'
 import { useHouse } from '@/hooks/useHouse'
+import { useHouseRole } from '@/hooks/useHouseRole'
 import { useChores } from '@/hooks/useChores'
 import { AddChoreSheet } from '@/components/chores/AddChoreSheet'
 import { HouseSettingsSheet } from '@/components/house/HouseSettingsSheet'
@@ -49,6 +50,7 @@ export default function ChoresManagerScreen() {
   const { accentGradient } = useUserAccent()
   const { session, profile } = useAuth()
   const { house, members } = useHouse(session?.user.id)
+  const { isAdmin } = useHouseRole(members, session?.user.id)
   const sheetRef = useRef<BottomSheet>(null)
   const [editingChore, setEditingChore] = useState<Chore | null>(null)
 
@@ -98,12 +100,12 @@ export default function ChoresManagerScreen() {
 
   function confirmDelete(chore: Chore) {
     Alert.alert(
-      'Delete chore?',
+      'Archive chore?',
       `"${chore.name}" will be removed for everyone.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Archive',
           style: 'destructive',
           onPress: async () => {
             const { error } = await deleteChore(chore.id)
@@ -208,14 +210,16 @@ export default function ChoresManagerScreen() {
                         ) : null}
                       </View>
 
-                      <View style={styles.choreActions}>
-                        <TouchableOpacity onPress={() => openEdit(chore)} style={styles.actionBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                          <Text style={styles.actionBtnText}>Edit</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => confirmDelete(chore)} style={[styles.actionBtn, styles.deleteBtn]} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                          <Text style={styles.deleteBtnText}>✕</Text>
-                        </TouchableOpacity>
-                      </View>
+                      {isAdmin && (
+                        <View style={styles.choreActions}>
+                          <TouchableOpacity onPress={() => openEdit(chore)} style={styles.actionBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                            <Text style={styles.actionBtnText}>Edit</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => confirmDelete(chore)} style={[styles.actionBtn, styles.deleteBtn]} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                            <Text style={styles.deleteBtnText}>✕</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
                     </View>
                   )
                 })}
@@ -226,12 +230,14 @@ export default function ChoresManagerScreen() {
         )}
       </ScrollView>
 
-      {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={openAdd} activeOpacity={0.85}>
-        <LinearGradient colors={accentGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fabGradient}>
-          <Text style={styles.fabIcon}>+</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+      {/* FAB — admin only */}
+      {isAdmin && (
+        <TouchableOpacity style={styles.fab} onPress={openAdd} activeOpacity={0.85}>
+          <LinearGradient colors={accentGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fabGradient}>
+            <Text style={styles.fabIcon}>+</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
 
       {house && profile && (
         <AddChoreSheet
