@@ -2,7 +2,7 @@
 
 -- ── 1. Add role column ──────────────────────────────────────────────────────
 alter table public.house_members
-  add column role text not null default 'member'
+  add column if not exists role text not null default 'member'
   check (role in ('admin', 'member'));
 
 -- Backfill: house creator becomes admin
@@ -15,12 +15,14 @@ where hm.house_id = h.id
 -- ── 2. Chore RLS: replace catch-all with read/write split ───────────────────
 drop policy if exists "chores: house members" on public.chores;
 
+drop policy if exists "members read chores" on public.chores;
 create policy "members read chores"
   on public.chores for select
   using (house_id in (
     select house_id from public.house_members where user_id = auth.uid()
   ));
 
+drop policy if exists "admins write chores" on public.chores;
 create policy "admins write chores"
   on public.chores for insert
   with check (
@@ -30,6 +32,7 @@ create policy "admins write chores"
     )
   );
 
+drop policy if exists "admins update chores" on public.chores;
 create policy "admins update chores"
   on public.chores for update
   using (
@@ -65,6 +68,7 @@ create policy "completions: insert own"
   );
 
 -- ── 4. Houses: admins can update house name ─────────────────────────────────
+drop policy if exists "admins update house" on public.houses;
 create policy "admins update house"
   on public.houses for update
   using (
@@ -98,6 +102,7 @@ begin
   if not found then raise exception 'not a member of this house'; end if;
 
   if v_role = 'admin' then
+    perform pg_advisory_xact_lock(hashtext(p_house_id::text));
     select count(*) into v_admin_count
     from public.house_members
     where house_id = p_house_id and role = 'admin' and user_id != v_caller;
@@ -113,6 +118,7 @@ $$;
 -- ── 6. Role management RPCs ─────────────────────────────────────────────────
 create or replace function public.change_member_role(
   p_target_user_id uuid,
+  p_house_id        uuid,
   p_new_role        text
 )
 returns void language plpgsql security definer set search_path = public as $$
@@ -124,15 +130,15 @@ begin
   if v_caller is null then raise exception 'not authenticated'; end if;
   if p_new_role not in ('admin', 'member') then raise exception 'invalid role'; end if;
 
-  select hm.house_id into v_house_id
-  from public.house_members hm
-  where hm.user_id = v_caller and hm.role = 'admin'
-    and hm.house_id = (
-      select house_id from public.house_members where user_id = p_target_user_id limit 1
-    );
-  if v_house_id is null then raise exception 'not authorized'; end if;
+  -- Verify caller is admin of the specified house
+  if not exists (
+    select 1 from public.house_members
+    where house_id = p_house_id and user_id = v_caller and role = 'admin'
+  ) then raise exception 'not authorized'; end if;
+  v_house_id := p_house_id;
 
   if p_new_role = 'member' then
+    perform pg_advisory_xact_lock(hashtext(p_house_id::text));
     select count(*) into v_admin_count
     from public.house_members
     where house_id = v_house_id and role = 'admin' and user_id != p_target_user_id;
@@ -147,7 +153,10 @@ begin
 end;
 $$;
 
-create or replace function public.remove_member(p_target_user_id uuid)
+create or replace function public.remove_member(
+  p_target_user_id uuid,
+  p_house_id        uuid
+)
 returns void language plpgsql security definer set search_path = public as $$
 declare
   v_caller      uuid := auth.uid();
@@ -157,19 +166,18 @@ declare
 begin
   if v_caller is null then raise exception 'not authenticated'; end if;
 
-  select hm.house_id into v_house_id
-  from public.house_members hm
-  where hm.user_id = v_caller and hm.role = 'admin'
-    and hm.house_id = (
-      select house_id from public.house_members where user_id = p_target_user_id limit 1
-    );
-  if v_house_id is null then raise exception 'not authorized'; end if;
+  if not exists (
+    select 1 from public.house_members
+    where house_id = p_house_id and user_id = v_caller and role = 'admin'
+  ) then raise exception 'not authorized'; end if;
+  v_house_id := p_house_id;
 
   select role into v_target_role
   from public.house_members
   where house_id = v_house_id and user_id = p_target_user_id;
 
   if v_target_role = 'admin' then
+    perform pg_advisory_xact_lock(hashtext(p_house_id::text));
     select count(*) into v_admin_count
     from public.house_members
     where house_id = v_house_id and role = 'admin' and user_id != p_target_user_id;
