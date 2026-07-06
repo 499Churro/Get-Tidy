@@ -153,6 +153,7 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
         {
           text: 'Log out',
           onPress: async () => {
+            onClose()
             await supabase.auth.signOut()
           },
         },
