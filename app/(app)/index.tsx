@@ -337,10 +337,6 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TidyLogo />
-        <View style={styles.headerGreeting}>
-          <Text style={styles.headerTitle}>Welcome back,</Text>
-          <Text style={styles.headerName}>{profile?.display_name?.split(' ')[0] ?? 'there'}</Text>
-        </View>
         <TouchableOpacity
           onPress={() => setSettingsOpen(true)}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -551,9 +547,6 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.surfaceContainerHigh,
     ...Shadows.card,
   },
-  headerGreeting: { alignItems: 'flex-end' },
-  headerTitle: { fontSize: 11, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
-  headerName: { fontSize: 14, fontFamily: Fonts.bold, color: Colors.primary },
   scroll: { flex: 1 },
   content: { paddingBottom: 100, gap: 16, paddingVertical: 16, paddingHorizontal: 20 },
   fullBleed: { marginHorizontal: -20 },

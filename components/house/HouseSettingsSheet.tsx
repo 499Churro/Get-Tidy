@@ -378,22 +378,29 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
                         <Text style={styles.editHint}>Edit →</Text>
                       )}
                       {!isMe && isAdmin && (
-                        <View style={styles.memberActions}>
-                          <TouchableOpacity
-                            style={styles.roleBtn}
-                            onPress={() => handleChangeMemberRole(m.user_id, isMemberAdmin ? 'member' : 'admin')}
-                            activeOpacity={0.7}
-                          >
-                            <Text style={styles.roleBtnText}>{isMemberAdmin ? 'Demote' : 'Promote'}</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={styles.removeBtn}
-                            onPress={() => handleRemoveMember(m.user_id)}
-                            activeOpacity={0.7}
-                          >
-                            <Text style={styles.removeBtnText}>Remove</Text>
-                          </TouchableOpacity>
-                        </View>
+                        <TouchableOpacity
+                          onPress={() =>
+                            Alert.alert(
+                              m.profile!.display_name,
+                              'What would you like to do?',
+                              [
+                                {
+                                  text: isMemberAdmin ? 'Make member' : 'Make admin',
+                                  onPress: () => handleChangeMemberRole(m.user_id, isMemberAdmin ? 'member' : 'admin'),
+                                },
+                                {
+                                  text: 'Remove from house',
+                                  style: 'destructive',
+                                  onPress: () => handleRemoveMember(m.user_id),
+                                },
+                                { text: 'Cancel', style: 'cancel' },
+                              ]
+                            )
+                          }
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.editMemberBtn}>Edit</Text>
+                        </TouchableOpacity>
                       )}
                     </RowWrapper>
                   )
@@ -656,21 +663,7 @@ const styles = StyleSheet.create({
   memberStatus: { fontSize: 12, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
   editHint: { fontSize: 12, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
   emptyMembers: { fontSize: 14, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
-  memberActions: { flexDirection: 'row', gap: 6 },
-  roleBtn: {
-    backgroundColor: Colors.primaryFixed,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  roleBtnText: { fontSize: 11, fontFamily: Fonts.bold, color: Colors.primary },
-  removeBtn: {
-    backgroundColor: Colors.errorContainer,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  removeBtnText: { fontSize: 11, fontFamily: Fonts.bold, color: Colors.error },
+  editMemberBtn: { fontSize: 13, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
 
   notifHint: { fontSize: 13, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant, paddingVertical: 4 },
   divider: { height: 1, backgroundColor: Colors.surfaceContainerHigh, marginVertical: 4 },
