@@ -65,7 +65,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
   function getChoresForSelectedDay(filterUserId?: string): ChoreWithCompletion[] {
     let dayChores = getChoresForDay(chores, selectedDate)
     if (filterUserId !== undefined) {
-      dayChores = dayChores.filter(c => c.assigned_to === filterUserId)
+      dayChores = dayChores.filter(c => c.assigned_to === filterUserId || c.assigned_to === null)
     }
     const sorted = sortChores(dayChores, completions, selectedDate)
     return sorted.map(chore => ({
