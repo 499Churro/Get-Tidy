@@ -17,7 +17,7 @@ export async function createHouse(userId: string, name: string): Promise<{ error
   if (error) return { error: error.message }
   const { error: memberError } = await supabase
     .from('house_members')
-    .insert({ house_id: data.id, user_id: userId })
+    .insert({ house_id: data.id, user_id: userId, role: 'admin' })
   if (!memberError) notifyHouseMembershipChanged()
   if (userId) registerForPushNotifications(userId).catch(() => {})
   return { error: memberError?.message ?? null }
