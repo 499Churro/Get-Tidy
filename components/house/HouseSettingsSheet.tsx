@@ -144,6 +144,22 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
     )
   }
 
+  async function handleLogout() {
+    Alert.alert(
+      'Log out?',
+      'You will need to sign in again to access your house.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Log out',
+          onPress: async () => {
+            await supabase.auth.signOut()
+          },
+        },
+      ]
+    )
+  }
+
   async function handleLeave() {
     Alert.alert(
       'Leave house?',
@@ -431,6 +447,11 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
             <TouchableOpacity style={styles.leaveBtn} onPress={handleLeave} activeOpacity={0.7}>
               <Text style={styles.leaveBtnText}>Leave house</Text>
             </TouchableOpacity>
+
+            {/* Log out */}
+            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.7}>
+              <Text style={styles.logoutBtnText}>Log out</Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
       </View>
@@ -672,6 +693,9 @@ const styles = StyleSheet.create({
 
   leaveBtn: { paddingVertical: 16, alignItems: 'center' },
   leaveBtnText: { fontSize: 15, fontFamily: Fonts.semibold, color: Colors.error },
+
+  logoutBtn: { paddingVertical: 10, alignItems: 'center' },
+  logoutBtnText: { fontSize: 13, fontFamily: Fonts.medium, color: Colors.onSurfaceVariant },
 
   // Profile edit modal
   profileOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
