@@ -1,0 +1,54 @@
+<h2>How are chore points set?</h2>
+<p class="subtitle">When someone completes a chore, how does the app decide how many points to award?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Fixed system</h3>
+      <p>Every chore is worth the same amount. Simple, no configuration needed.</p>
+      <div style="margin-top:12px; padding:12px; background:#f9fafb; border-radius:8px; font-size:13px; display:flex; gap:16px;">
+        <span>✅ On time → <strong>10 pts</strong></span>
+        <span>⚠️ Overdue → <strong>15 pts</strong></span>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Zero setup — just do chores, earn points</li><li>Fair, no disputes</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Scrubbing toilets = doing dishes = unfair</li><li>Admin can't reward harder chores more</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Admin sets points per chore <span style="background:#7c3aed;color:#fff;font-size:11px;padding:2px 8px;border-radius:99px;margin-left:8px;font-weight:600">Recommended</span></h3>
+      <p>When creating or editing a chore, admin sets the point value. Full control, rewards effort fairly.</p>
+      <div style="margin-top:12px; padding:12px; background:#faf5ff; border-radius:8px; font-size:13px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>🧹 Sweep floors</span><strong>10 pts</strong></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>🚽 Clean bathroom</span><strong>25 pts</strong></div>
+        <div style="display:flex; justify-content:space-between;"><span>🪟 Wash windows</span><strong>40 pts</strong></div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Harder chores = more points = fair</li><li>Admin can incentivize least-liked chores</li><li>Works perfectly for family context</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Admin needs to think about point values when creating chores</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Difficulty tiers</h3>
+      <p>Admin picks Easy / Medium / Hard when creating a chore. Points are preset per tier.</p>
+      <div style="margin-top:12px; padding:12px; background:#f0fdf4; border-radius:8px; font-size:13px; display:flex; gap:16px;">
+        <span>🟢 Easy → <strong>10 pts</strong></span>
+        <span>🟡 Medium → <strong>20 pts</strong></span>
+        <span>🔴 Hard → <strong>40 pts</strong></span>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Quick to set up, no math needed</li><li>Clear and understandable for kids</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Less precise than custom values</li><li>Tier labels can feel subjective</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

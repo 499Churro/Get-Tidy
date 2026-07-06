@@ -1,0 +1,50 @@
+<h2>How do kids join?</h2>
+<p class="subtitle">Young kids don't have email addresses. How should they get into the app?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Standard sign-up — email required</h3>
+      <p>Kids use the same flow as everyone else. Parent sets up an email for them (e.g., kidname@gmail.com) and they log in with that.</p>
+      <div style="margin-top:12px; padding:12px; background:#f9fafb; border-radius:8px; font-size:13px;">
+        <strong>Flow:</strong> Parent creates email → kid downloads app → signs up → joins with house code
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Zero new code — works today</li><li>Kids learn to manage their own account</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Friction for young kids (6–10)</li><li>Parent has to manage another email</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Parent-created child accounts <span style="background:#7c3aed;color:#fff;font-size:11px;padding:2px 8px;border-radius:99px;margin-left:8px;font-weight:600">Recommended</span></h3>
+      <p>Admin creates a child account from inside the app — just a name and a 4-digit PIN. Child uses the PIN to log in on their device. No email needed.</p>
+      <div style="margin-top:12px; padding:12px; background:#faf5ff; border-radius:8px; font-size:13px;">
+        <strong>Parent flow:</strong> House tab → Add member → "Create child account" → enter name + PIN<br><br>
+        <strong>Kid flow:</strong> Open app → "I'm a kid" → enter house code + PIN → in
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Works for any age — even 6 year olds</li><li>Parent stays in full control</li><li>Dead simple for kids</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>More work to build (new auth path)</li><li>PIN-only accounts have less security</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Same house code join — parent marks as child after</h3>
+      <p>Kid signs up with email (or parent's email), joins with house code, then parent marks their account as "child role" inside the app.</p>
+      <div style="margin-top:12px; padding:12px; background:#f0fdf4; border-radius:8px; font-size:13px;">
+        <strong>Flow:</strong> Kid joins normally → parent opens House tab → taps member → sets role to "Child"
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Minimal new auth code</li><li>Role assignment already fits the flexible-roles model</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Still requires an email for the kid</li><li>Role change is easy to forget</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

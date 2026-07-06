@@ -16,6 +16,7 @@ export interface House {
   created_by: string
   created_at: string
   code: string
+  rotation_enabled: boolean
 }
 
 export interface HouseMember {
@@ -40,6 +41,7 @@ export interface Chore {
   reminder_time: string | null
   archived_at: string | null
   created_at: string
+  rotation_enabled: boolean
   assigned_profile?: Profile
 }
 

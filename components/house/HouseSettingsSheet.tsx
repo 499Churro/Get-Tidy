@@ -11,6 +11,7 @@ import {
   TextInput,
   ActivityIndicator,
   Image,
+  Switch,
 } from 'react-native'
 import { useState } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -33,7 +34,7 @@ interface HouseSettingsSheetProps {
 export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps) {
   const { accentColor } = useUserAccent()
   const { session, profile, updateProfile } = useAuth()
-  const { house, members, leaveHouse, refetch: refetchHouse } = useHouse(session?.user.id)
+  const { house, members, leaveHouse, toggleHouseRotation, refetch: refetchHouse } = useHouse(session?.user.id)
   const { isAdmin } = useHouseRole(members, session?.user.id)
   const { momentum, loading: momentumLoading, goal, saveGoal } = useMomentum()
 
@@ -219,6 +220,32 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
                 <Text style={styles.primaryBtnText}>Share Code</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Chore Rotation — admin only */}
+            {isAdmin && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Chore rotation</Text>
+                <View style={styles.card}>
+                  <View style={styles.rotationRow}>
+                    <View style={{ flex: 1, marginRight: 12 }}>
+                      <Text style={styles.rotationLabel}>Auto-rotate assignments</Text>
+                      <Text style={styles.rotationHint}>
+                        When on, chores with rotation enabled will automatically reassign to the next roommate after completion.
+                      </Text>
+                    </View>
+                    <Switch
+                      value={house?.rotation_enabled ?? false}
+                      onValueChange={async (val) => {
+                        const { error } = await toggleHouseRotation(val)
+                        if (error) Alert.alert('Error', error)
+                      }}
+                      trackColor={{ false: Colors.surfaceContainerHigh, true: Colors.primary }}
+                      thumbColor="#fff"
+                    />
+                  </View>
+                </View>
+              </View>
+            )}
 
             {/* House Goal */}
             <View style={styles.section}>
@@ -614,6 +641,10 @@ const styles = StyleSheet.create({
     borderColor: Colors.surfaceContainerHigh,
     ...Shadows.card,
   },
+
+  rotationRow: { flexDirection: 'row', alignItems: 'center' },
+  rotationLabel: { fontSize: 15, fontFamily: Fonts.semibold, color: Colors.onSurface, marginBottom: 4 },
+  rotationHint: { fontSize: 12, fontFamily: Fonts.regular, color: Colors.onSurfaceVariant, lineHeight: 17 },
 
   codeLabel: { fontSize: 11, fontFamily: Fonts.bold, color: Colors.outline, textTransform: 'uppercase', letterSpacing: 1, textAlign: 'center', marginBottom: 8 },
   codeRow: {

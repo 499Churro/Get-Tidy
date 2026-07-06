@@ -1,0 +1,51 @@
+<h2>How does spending points work?</h2>
+<p class="subtitle">When a member wants to redeem a reward from the store, what happens?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Self-service — instant claim</h3>
+      <p>Member taps a reward, points are deducted immediately, reward is marked claimed. No admin involved.</p>
+      <div style="margin-top:12px; padding:12px; background:#f0fdf4; border-radius:8px; font-size:13px;">
+        <strong>Flow:</strong> Browse store → tap reward → points deducted → ✅ Claimed
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Best for</h4><ul><li>Roommates ("skip dishes night" doesn't need approval)</li></ul></div>
+        <div class="cons"><h4>Problem</h4><ul><li>Kids can claim "stay up late" at 2am without parent knowing</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Always requires admin approval</h3>
+      <p>Member requests a reward. Admin gets a push notification and approves or denies it. Points only deduct on approval.</p>
+      <div style="margin-top:12px; padding:12px; background:#eff6ff; border-radius:8px; font-size:13px;">
+        <strong>Flow:</strong> Browse store → tap reward → request sent → admin approves → ✅ Claimed
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Best for</h4><ul><li>Families — parent stays in control</li></ul></div>
+        <div class="cons"><h4>Problem</h4><ul><li>Overkill for roommates — nobody wants to ask permission for a fun reward</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Admin chooses per reward <span style="background:#7c3aed;color:#fff;font-size:11px;padding:2px 8px;border-radius:99px;margin-left:8px;font-weight:600">Recommended</span></h3>
+      <p>When creating a reward, admin marks it as <strong>Instant</strong> or <strong>Needs approval</strong>. Both modes coexist in the same store.</p>
+      <div style="margin-top:12px; padding:12px; background:#faf5ff; border-radius:8px; font-size:13px;">
+        <strong>Example:</strong><br>
+        🟢 <em>Instant</em> — "Pick the movie tonight" (50 pts)<br>
+        🔵 <em>Needs approval</em> — "Stay up 1 hour late" (100 pts)
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Works for both families and roommates</li><li>Admin decides what needs oversight</li><li>Most natural UX for both contexts</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Slightly more to configure when creating a reward</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

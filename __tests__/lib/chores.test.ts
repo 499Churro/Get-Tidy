@@ -14,6 +14,7 @@ const baseChore: Chore = {
   reminder_time: null,
   archived_at: null,
   created_at: '2026-06-22T00:00:00Z',
+  rotation_enabled: false,
 }
 
 const mondayDate = '2026-06-22' // Known Monday

@@ -1,0 +1,108 @@
+<h2>Design Overview</h2>
+<p class="subtitle">What we're building — two phases, four subsystems</p>
+
+<div class="section">
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">👑 Admin view (parent / house manager)</div>
+      <div class="mockup-body" style="padding:0">
+        <div style="display:flex; border-bottom:1px solid #e5e7eb;">
+          <div style="flex:1; padding:10px 12px; font-size:12px; font-weight:600; color:#7c3aed; border-bottom:2px solid #7c3aed;">🏠 Home</div>
+          <div style="flex:1; padding:10px 12px; font-size:12px; color:#6b7280;">✅ Chores</div>
+          <div style="flex:1; padding:10px 12px; font-size:12px; color:#6b7280;">🏪 Store</div>
+          <div style="flex:1; padding:10px 12px; font-size:12px; color:#6b7280;">⚙️ House</div>
+        </div>
+        <div style="padding:12px; font-size:12px; color:#374151;">
+          <div style="background:#f3f4f6; border-radius:8px; padding:10px; margin-bottom:8px;">📊 House momentum bar</div>
+          <div style="background:#f3f4f6; border-radius:8px; padding:10px; margin-bottom:8px;">👤 Member avatars + balances</div>
+          <div style="background:#f3f4f6; border-radius:8px; padding:10px;">📋 Today's tasks (all members)</div>
+        </div>
+        <div style="padding:8px 12px; background:#faf5ff; border-top:1px solid #e9d5ff; font-size:11px; color:#7c3aed;">
+          ✦ Can manage chores, store, roles, house settings
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header">👤 Member view (child / roommate)</div>
+      <div class="mockup-body" style="padding:0">
+        <div style="display:flex; border-bottom:1px solid #e5e7eb;">
+          <div style="flex:1; padding:10px 12px; font-size:12px; font-weight:600; color:#7c3aed; border-bottom:2px solid #7c3aed;">🏠 Home</div>
+          <div style="flex:1; padding:10px 12px; font-size:12px; color:#6b7280;">🏪 Store</div>
+        </div>
+        <div style="padding:12px; font-size:12px; color:#374151;">
+          <div style="background:#f3f4f6; border-radius:8px; padding:10px; margin-bottom:8px;">🪙 My point balance: <strong>120 pts</strong></div>
+          <div style="background:#f3f4f6; border-radius:8px; padding:10px; margin-bottom:8px;">📋 My tasks today</div>
+          <div style="background:#f3f4f6; border-radius:8px; padding:10px;">🔥 My streak</div>
+        </div>
+        <div style="padding:8px 12px; background:#f0fdf4; border-top:1px solid #bbf7d0; font-size:11px; color:#15803d;">
+          ✦ Only sees own tasks and the store. No admin controls.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>The Store</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">Admin: Create a reward</div>
+      <div class="mockup-body" style="font-size:12px; color:#374151;">
+        <div style="margin-bottom:8px;"><span style="color:#6b7280">Name</span><br><div style="background:#f3f4f6; padding:6px 10px; border-radius:6px; margin-top:4px;">Stay up 1 hour late</div></div>
+        <div style="margin-bottom:8px;"><span style="color:#6b7280">Point cost</span><br><div style="background:#f3f4f6; padding:6px 10px; border-radius:6px; margin-top:4px;">100 pts</div></div>
+        <div style="margin-bottom:8px;"><span style="color:#6b7280">Emoji</span><br><div style="background:#f3f4f6; padding:6px 10px; border-radius:6px; margin-top:4px;">🌙</div></div>
+        <div>
+          <span style="color:#6b7280">Redemption</span><br>
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <div style="flex:1; background:#ede9fe; border-radius:6px; padding:6px 10px; color:#7c3aed; font-weight:600; font-size:11px;">⚡ Instant</div>
+            <div style="flex:1; background:#7c3aed; border-radius:6px; padding:6px 10px; color:#fff; font-weight:600; font-size:11px; text-align:center;">✋ Needs approval</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-header">Member: Browse & redeem</div>
+      <div class="mockup-body" style="font-size:12px; color:#374151;">
+        <div style="background:#f3f4f6; border-radius:8px; padding:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+          <span>🌙 Stay up 1 hour late</span>
+          <span style="background:#7c3aed; color:#fff; border-radius:99px; padding:3px 10px; font-size:11px; font-weight:700;">100 pts</span>
+        </div>
+        <div style="background:#f3f4f6; border-radius:8px; padding:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+          <span>🍫 Extra dessert</span>
+          <span style="background:#7c3aed; color:#fff; border-radius:99px; padding:3px 10px; font-size:11px; font-weight:700;">50 pts</span>
+        </div>
+        <div style="background:#f3f4f6; border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
+          <span>📺 Movie night pick</span>
+          <span style="background:#16a34a; color:#fff; border-radius:99px; padding:3px 10px; font-size:11px; font-weight:700;">30 pts ⚡</span>
+        </div>
+        <div style="margin-top:10px; background:#faf5ff; border-radius:8px; padding:8px 10px; font-size:11px; color:#7c3aed;">My balance: <strong>120 pts</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Build order — two phases</h3>
+  <div style="display:flex; gap:12px;">
+    <div style="flex:1; border:2px solid #7c3aed; border-radius:12px; padding:14px;">
+      <div style="font-weight:700; color:#7c3aed; margin-bottom:8px;">Phase A — Foundation</div>
+      <ul style="font-size:13px; color:#374151; margin:0; padding-left:18px; line-height:1.8;">
+        <li>Add <code>role</code> to house_members (admin / member)</li>
+        <li>Role management in House settings</li>
+        <li>Gate admin screens from members</li>
+        <li>Member tab bar: Home + Store only</li>
+      </ul>
+    </div>
+    <div style="flex:1; border:2px solid #e5e7eb; border-radius:12px; padding:14px;">
+      <div style="font-weight:700; color:#6b7280; margin-bottom:8px;">Phase B — Store</div>
+      <ul style="font-size:13px; color:#374151; margin:0; padding-left:18px; line-height:1.8;">
+        <li>Points per chore (admin sets value)</li>
+        <li>Restore score ledger as currency</li>
+        <li>Store tab: admin CRUD, member browse</li>
+        <li>Redemption flow + approval notifications</li>
+      </ul>
+    </div>
+  </div>
+</div>

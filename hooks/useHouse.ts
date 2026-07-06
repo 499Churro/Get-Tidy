@@ -59,6 +59,16 @@ export function useHouse(userId: string | undefined) {
     return result
   }
 
+  async function toggleHouseRotation(enabled: boolean): Promise<{ error: string | null }> {
+    if (!house) return { error: 'No house.' }
+    const { error } = await supabase
+      .from('houses')
+      .update({ rotation_enabled: enabled })
+      .eq('id', house.id)
+    if (!error) await fetchHouse()
+    return { error: error?.message ?? null }
+  }
+
   async function leaveHouse(): Promise<{ error: string | null }> {
     if (!house) return { error: 'No house to leave.' }
     await supabase
@@ -74,5 +84,5 @@ export function useHouse(userId: string | undefined) {
     return { error: error?.message ?? null }
   }
 
-  return { house, members, loading, createHouse, joinHouse, leaveHouse, refetch: fetchHouse }
+  return { house, members, loading, createHouse, joinHouse, leaveHouse, toggleHouseRotation, refetch: fetchHouse }
 }

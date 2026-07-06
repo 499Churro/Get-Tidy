@@ -42,6 +42,7 @@ interface ChoreParams {
   frequency: Frequency
   daysOfWeek: number[] | null
   reminderTime: string | null
+  rotationEnabled: boolean
   houseId: string
   createdBy: string
 }
@@ -50,6 +51,7 @@ interface AddChoreSheetProps {
   members: HouseMember[]
   currentUserId: string
   houseId: string
+  houseRotationEnabled: boolean
   editingChore?: Chore | null
   onAdd: (params: ChoreParams) => Promise<{ error: string | null }>
   onUpdate?: (choreId: string, updates: Partial<Omit<ChoreParams, 'houseId' | 'createdBy'>>) => Promise<{ error: string | null }>
@@ -57,9 +59,10 @@ interface AddChoreSheetProps {
 }
 
 export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
-  function AddChoreSheet({ members, currentUserId, houseId, editingChore, onAdd, onUpdate, onClose }, ref) {
+  function AddChoreSheet({ members, currentUserId, houseId, houseRotationEnabled, editingChore, onAdd, onUpdate, onClose }, ref) {
     const [name, setName] = useState('')
     const [assignedTo, setAssignedTo] = useState<string | null>(currentUserId)
+    const [rotationEnabled, setRotationEnabled] = useState(false)
     const [reminderEnabled, setReminderEnabled] = useState(false)
     const [reminderTime, setReminderTime] = useState<Date>(() => {
       const d = new Date(); d.setHours(8, 0, 0, 0); return d
@@ -81,6 +84,7 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
       setOneTimeDate(new Date())
       setShowDatePicker(false)
       setAssignedTo(currentUserId)
+      setRotationEnabled(false)
       setReminderEnabled(false)
       const d = new Date(); d.setHours(8, 0, 0, 0)
       setReminderTime(d)
@@ -106,6 +110,7 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
                 : [1]
           )
         }
+        setRotationEnabled(editingChore.rotation_enabled ?? false)
         if (editingChore.reminder_time) {
           setReminderEnabled(true)
           const [h, m] = editingChore.reminder_time.split(':').map(Number)
@@ -146,14 +151,14 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
           const result = await onUpdate(editingChore.id, {
             name: name.trim(), assignedTo, dueDate: dueDateStr,
             notes: notes.trim() || null, frequency, daysOfWeek: days,
-            reminderTime: reminderStr,
+            reminderTime: reminderStr, rotationEnabled,
           })
           error = result.error
         } else {
           const result = await onAdd({
             name: name.trim(), assignedTo, dueDate: dueDateStr,
             notes: notes.trim() || null, frequency, daysOfWeek: days,
-            reminderTime: reminderStr, houseId, createdBy: currentUserId,
+            reminderTime: reminderStr, rotationEnabled, houseId, createdBy: currentUserId,
           })
           error = result.error
         }
@@ -362,6 +367,22 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
               onChangeText={setNotes}
               multiline
             />
+
+            {/* Rotation — only when house rotation is on and chore has a specific assignee */}
+            {houseRotationEnabled && assignedTo !== null && (
+              <View style={styles.reminderRow}>
+                <View style={styles.reminderLeft}>
+                  <Text style={styles.fieldLabel}>Rotate assignment</Text>
+                  <Text style={styles.rotateHint}>After each completion, reassign to next person</Text>
+                </View>
+                <Switch
+                  value={rotationEnabled}
+                  onValueChange={setRotationEnabled}
+                  trackColor={{ false: Colors.surfaceContainerHigh, true: accentColor }}
+                  thumbColor="#fff"
+                />
+              </View>
+            )}
           </ScrollView>
 
           {saveError && (
@@ -435,6 +456,7 @@ const styles = StyleSheet.create({
   notesInput: { height: 72, textAlignVertical: 'top' },
   reminderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   reminderLeft: { flex: 1, gap: 4 },
+  rotateHint: { fontSize: 11, fontFamily: Fonts.regular, color: Colors.onSurfaceVariant },
   reminderTimeBtn: { alignSelf: 'flex-start' },
   reminderTimeText: { fontSize: 15, fontFamily: Fonts.semibold },
   errorText: { fontSize: 13, fontFamily: Fonts.medium, color: Colors.error, textAlign: 'center', marginBottom: 8 },

@@ -1,0 +1,70 @@
+<h2>Gamification Directions for Tidy</h2>
+<p class="subtitle">Pick the feeling you want people to come back for. These are product directions, not final UI.</p>
+
+<div class="cards">
+  <div class="card" data-choice="calm-progress" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="padding:18px;background:#fff8f4;border-radius:18px;border:1px solid #eadfd8">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <strong>Today</strong>
+          <span style="background:#f3ebe5;border-radius:999px;padding:6px 10px;font-size:12px">+30 pts</span>
+        </div>
+        <div style="height:10px;background:#efe5de;border-radius:999px;overflow:hidden;margin-bottom:16px">
+          <div style="height:100%;width:72%;background:#6f8f72;border-radius:999px"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:24px">🔥</span>
+          <div><strong>4-day rhythm</strong><br><span style="opacity:.7">You are keeping pace.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Calm Personal Progress</h3>
+      <p>Streaks, gentle points, and quiet encouragement. Best for avoiding roommate pressure while still creating a habit loop.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="house-quest" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="padding:18px;background:#f7faf7;border-radius:18px;border:1px solid #dce8dc">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <strong>House Quest</strong>
+          <span style="font-size:12px;opacity:.7">Week 2</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+          <div style="height:54px;border-radius:14px;background:#dfeee0;display:flex;align-items:center;justify-content:center">✓</div>
+          <div style="height:54px;border-radius:14px;background:#dfeee0;display:flex;align-items:center;justify-content:center">✓</div>
+          <div style="height:54px;border-radius:14px;background:#fff;border:1px dashed #b9c8b9;display:flex;align-items:center;justify-content:center">3</div>
+          <div style="height:54px;border-radius:14px;background:#fff;border:1px dashed #b9c8b9;display:flex;align-items:center;justify-content:center">4</div>
+        </div>
+        <span style="background:#28382d;color:white;border-radius:999px;padding:7px 12px;font-size:12px">Unlock: Friday clean kitchen</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. House Quests</h3>
+      <p>The house works toward shared weekly goals. Best for retention through teamwork, but needs careful copy so it never blames one person.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="cozy-competition" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="padding:18px;background:#fbf7ff;border-radius:18px;border:1px solid #e8ddf2">
+        <strong>This House</strong>
+        <div style="margin-top:12px;display:grid;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px;background:white;border-radius:14px;padding:10px"><span>1</span><span style="width:28px;height:28px;border-radius:50%;background:#c8a7e8"></span><strong style="flex:1">Maya</strong><span>240</span></div>
+          <div style="display:flex;align-items:center;gap:10px;background:#f2e9fa;border-radius:14px;padding:10px;border-left:4px solid #8b5fbf"><span>2</span><span style="width:28px;height:28px;border-radius:50%;background:#8b5fbf"></span><strong style="flex:1">You</strong><span>220</span></div>
+          <div style="display:flex;align-items:center;gap:10px;background:white;border-radius:14px;padding:10px"><span>3</span><span style="width:28px;height:28px;border-radius:50%;background:#e0c37b"></span><strong style="flex:1">Alex</strong><span>180</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Cozy Competition</h3>
+      <p>A visible leaderboard with soft rankings and weekly resets/views. Best for social motivation, highest risk of feeling judgmental.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>My early recommendation</h3>
+  <p>Start with <strong>A + a small amount of B</strong>: personal streaks and points as the daily loop, plus lightweight house goals later. Keep C as a House-tab-only view, never the main emotional driver.</p>
+</div>

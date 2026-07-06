@@ -145,6 +145,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
     frequency: Frequency
     daysOfWeek: number[] | null
     reminderTime: string | null
+    rotationEnabled: boolean
     houseId: string
     createdBy: string
   }): Promise<{ error: string | null }> {
@@ -156,6 +157,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
       frequency: params.frequency,
       days_of_week: params.daysOfWeek,
       reminder_time: params.reminderTime,
+      rotation_enabled: params.rotationEnabled,
       house_id: params.houseId,
       created_by: params.createdBy,
     })
@@ -173,6 +175,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
       frequency?: Frequency
       daysOfWeek?: number[] | null
       reminderTime?: string | null
+      rotationEnabled?: boolean
     }
   ): Promise<{ error: string | null }> {
     const patch: Record<string, unknown> = {}
@@ -183,6 +186,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
     if (updates.frequency !== undefined) patch.frequency = updates.frequency
     if (updates.daysOfWeek !== undefined) patch.days_of_week = updates.daysOfWeek
     if (updates.reminderTime !== undefined) patch.reminder_time = updates.reminderTime
+    if (updates.rotationEnabled !== undefined) patch.rotation_enabled = updates.rotationEnabled
     const { error } = await supabase.from('chores').update(patch).eq('id', choreId)
     if (!error) await fetchAll()
     return { error: error?.message ?? null }

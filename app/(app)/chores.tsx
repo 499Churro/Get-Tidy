@@ -241,6 +241,7 @@ export default function ChoresManagerScreen() {
           members={members}
           currentUserId={session?.user.id ?? ''}
           houseId={house.id}
+          houseRotationEnabled={house.rotation_enabled ?? false}
           editingChore={editingChore}
           onAdd={addChore}
           onUpdate={updateChore}
