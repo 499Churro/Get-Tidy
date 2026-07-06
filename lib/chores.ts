@@ -26,8 +26,11 @@ export function getChoresForDay(chores: Chore[], forDate: string): Chore[] {
     // One-off: show only on the specified date (can be in the past or future)
     if (chore.due_date) return chore.due_date === forDate
 
-    // Repeating: never show on dates before the chore was created
-    if (forDate < chore.created_at.slice(0, 10)) return false
+    // Repeating: never show on dates before the chore was created.
+    // created_at is UTC from Supabase; forDate is local — convert to local date for comparison.
+    const ca = new Date(chore.created_at)
+    const createdLocalISO = `${ca.getFullYear()}-${String(ca.getMonth() + 1).padStart(2, '0')}-${String(ca.getDate()).padStart(2, '0')}`
+    if (forDate < createdLocalISO) return false
 
     // Legacy daily — show every day
     if (chore.frequency === 'daily') return true
