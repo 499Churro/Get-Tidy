@@ -434,7 +434,7 @@ export default function HomeScreen() {
             {filteredChores.map(chore => {
               const isDone = chore.completion !== null
               const isOverdue = !isDone && !!chore.due_date && chore.due_date < today
-              const isAssignedToMe = chore.assigned_to === session?.user.id
+              const isAssignedToMe = chore.assigned_to === session?.user.id || chore.assigned_to === null
               const colorIdx = chore.assigned_profile?.avatar_color_index ?? -1
               const barColor = colorIdx >= 0
                 ? AvatarGradients[colorIdx % AvatarGradients.length][0]
