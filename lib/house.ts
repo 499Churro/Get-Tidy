@@ -9,18 +9,13 @@ function generateCode(): string {
 
 export async function createHouse(userId: string, name: string): Promise<{ error: string | null }> {
   const code = generateCode()
-  const { data, error } = await supabase
-    .from('houses')
-    .insert({ name, created_by: userId, code })
-    .select()
-    .single()
+  const { data, error } = await supabase.rpc('create_house', { p_name: name, p_code: code })
   if (error) return { error: error.message }
-  const { error: memberError } = await supabase
-    .from('house_members')
-    .insert({ house_id: data.id, user_id: userId, role: 'admin' })
-  if (!memberError) notifyHouseMembershipChanged()
+  const result = data as { house_id: string | null; error: string | null }
+  if (result.error) return { error: result.error }
+  notifyHouseMembershipChanged()
   if (userId) registerForPushNotifications(userId).catch(() => {})
-  return { error: memberError?.message ?? null }
+  return { error: null }
 }
 
 export async function joinHouse(userId: string, code: string): Promise<{ error: string | null }> {
