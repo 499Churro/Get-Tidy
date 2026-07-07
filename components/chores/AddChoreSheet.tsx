@@ -51,7 +51,6 @@ interface AddChoreSheetProps {
   members: HouseMember[]
   currentUserId: string
   houseId: string
-  houseRotationEnabled: boolean
   editingChore?: Chore | null
   onAdd: (params: ChoreParams) => Promise<{ error: string | null }>
   onUpdate?: (choreId: string, updates: Partial<Omit<ChoreParams, 'houseId' | 'createdBy'>>) => Promise<{ error: string | null }>
@@ -59,7 +58,7 @@ interface AddChoreSheetProps {
 }
 
 export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
-  function AddChoreSheet({ members, currentUserId, houseId, houseRotationEnabled, editingChore, onAdd, onUpdate, onClose }, ref) {
+  function AddChoreSheet({ members, currentUserId, houseId, editingChore, onAdd, onUpdate, onClose }, ref) {
     const [name, setName] = useState('')
     const [assignedTo, setAssignedTo] = useState<string | null>(currentUserId)
     const [rotationEnabled, setRotationEnabled] = useState(false)
@@ -368,21 +367,19 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
               multiline
             />
 
-            {/* Rotation — only when house rotation is on and chore has a specific assignee */}
-            {houseRotationEnabled && assignedTo !== null && (
-              <View style={styles.reminderRow}>
-                <View style={styles.reminderLeft}>
-                  <Text style={styles.fieldLabel}>Rotate assignment</Text>
-                  <Text style={styles.rotateHint}>After each completion, reassign to next person</Text>
-                </View>
-                <Switch
-                  value={rotationEnabled}
-                  onValueChange={setRotationEnabled}
-                  trackColor={{ false: Colors.surfaceContainerHigh, true: accentColor }}
-                  thumbColor="#fff"
-                />
+            {/* Rotation */}
+            <View style={styles.reminderRow}>
+              <View style={styles.reminderLeft}>
+                <Text style={styles.fieldLabel}>Rotate between roommates</Text>
+                <Text style={styles.rotateHint}>After each completion, reassign to the next person</Text>
               </View>
-            )}
+              <Switch
+                value={rotationEnabled}
+                onValueChange={setRotationEnabled}
+                trackColor={{ false: Colors.surfaceContainerHigh, true: accentColor }}
+                thumbColor="#fff"
+              />
+            </View>
           </ScrollView>
 
           {saveError && (
