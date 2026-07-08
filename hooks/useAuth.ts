@@ -3,6 +3,7 @@ import { Session } from '@supabase/supabase-js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '@/lib/supabase'
 import { Profile } from '@/types/database'
+import { addDeviceProfile, updateDeviceProfile, savePrimaryRefreshToken, getDeviceProfiles } from '@/lib/deviceProfiles'
 
 const PROFILE_CACHE_KEY = 'tidy:cached_profile'
 
@@ -36,6 +37,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data) {
       setProfile(data)
       AsyncStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(data)).catch(() => {})
+
+      // Register primary user in device profiles so the switcher can show them.
+      // Skip for managed profiles (email ends in @tidy.local — no need to register).
+      const isManaged = s.user.email?.endsWith('@tidy.local') ?? false
+      if (!isManaged) {
+        // Always update the refresh token (it rotates on each use)
+        if (s.refresh_token) {
+          savePrimaryRefreshToken(s.refresh_token).catch(() => {})
+        }
+        // Register or update device profile entry
+        getDeviceProfiles().then(async (existing) => {
+          const alreadyThere = existing.some(p => p.userId === s.user.id)
+          if (!alreadyThere) {
+            const { data: membership } = await supabase
+              .from('house_members')
+              .select('house_id')
+              .eq('user_id', s.user.id)
+              .limit(1)
+              .single()
+            if (membership) {
+              addDeviceProfile({
+                userId: s.user.id,
+                email: s.user.email ?? '',
+                password: '',
+                displayName: data.display_name,
+                avatarColorIndex: data.avatar_color_index,
+                avatarUrl: data.avatar_url ?? null,
+                pin: null,
+                isManaged: false,
+                houseId: membership.house_id,
+              }).catch(() => {})
+            }
+          } else {
+            updateDeviceProfile(s.user.id, {
+              displayName: data.display_name,
+              avatarColorIndex: data.avatar_color_index,
+              avatarUrl: data.avatar_url ?? null,
+            }).catch(() => {})
+          }
+        }).catch(() => {})
+      }
     }
     setLoading(false)
   }
