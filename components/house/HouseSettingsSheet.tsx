@@ -13,7 +13,7 @@ import {
   Image,
   Switch,
 } from 'react-native'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as ImagePicker from 'expo-image-picker'
 import { useAuth } from '@/hooks/useAuth'
@@ -25,6 +25,8 @@ import { Colors, Fonts, Shadows, AvatarGradients } from '@/constants/theme'
 import { useUserAccent } from '@/context/UserAccentContext'
 import { supabase } from '@/lib/supabase'
 import { getRecapCopy } from '@/lib/houseMomentum'
+import { getDeviceProfiles, removeDeviceProfile, DeviceProfile } from '@/lib/deviceProfiles'
+import { CreateManagedProfileSheet } from '@/components/profiles/CreateManagedProfileSheet'
 
 interface HouseSettingsSheetProps {
   visible: boolean
@@ -49,6 +51,18 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
   const [goalDraft, setGoalDraft] = useState('')
   const [goalEditing, setGoalEditing] = useState(false)
   const [targetDaysDraft, setTargetDaysDraft] = useState('20')
+
+  // Device profiles state
+  const [managedProfiles, setManagedProfiles] = useState<DeviceProfile[]>([])
+  const [createProfileOpen, setCreateProfileOpen] = useState(false)
+
+  useEffect(() => {
+    if (visible && house) {
+      getDeviceProfiles().then(all =>
+        setManagedProfiles(all.filter(p => p.isManaged && p.houseId === house.id))
+      )
+    }
+  }, [visible, house])
 
   function openEditProfile() {
     setDraftName(profile?.display_name ?? '')
@@ -181,6 +195,45 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
     )
   }
 
+  async function handleRemoveProfile(p: DeviceProfile) {
+    Alert.alert(
+      'Remove profile?',
+      `${p.displayName}'s profile will be deleted from this device and the house.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            const { data: sessionData } = await supabase.auth.getSession()
+            const accessToken = sessionData.session?.access_token
+            if (!accessToken) return
+            const response = await fetch(
+              `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/delete-managed-profile`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${accessToken}`,
+                  'apikey': (process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY as string),
+                },
+                body: JSON.stringify({ targetUserId: p.userId }),
+              }
+            )
+            const result = await response.json()
+            if (!response.ok || result.error) {
+              Alert.alert('Error', result.error ?? 'Failed to remove profile')
+              return
+            }
+            await removeDeviceProfile(p.userId)
+            setManagedProfiles(prev => prev.filter(mp => mp.userId !== p.userId))
+            refetchHouse()
+          },
+        },
+      ]
+    )
+  }
+
   if (!house) return null
 
   return (
@@ -243,6 +296,45 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
                       thumbColor="#fff"
                     />
                   </View>
+                </View>
+              </View>
+            )}
+
+            {/* Device Profiles — admin only */}
+            {isAdmin && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Device profiles</Text>
+                <View style={styles.card}>
+                  <Text style={styles.notifHint}>
+                    Add profiles so family members can share this device and check off their own tasks.
+                  </Text>
+                  {managedProfiles.length > 0 && (
+                    <>
+                      <View style={styles.divider} />
+                      {managedProfiles.map((mp, idx) => (
+                        <View key={mp.userId} style={[styles.memberRow, idx > 0 && styles.memberRowBorder]}>
+                          <View style={styles.memberInfo}>
+                            <Text style={styles.memberName}>{mp.displayName}</Text>
+                            {mp.pin ? <Text style={styles.memberStatus}>PIN protected</Text> : null}
+                          </View>
+                          <TouchableOpacity
+                            onPress={() => handleRemoveProfile(mp)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={styles.editHint}>Remove</Text>
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </>
+                  )}
+                  <View style={styles.divider} />
+                  <TouchableOpacity
+                    style={styles.openSettingsRow}
+                    onPress={() => setCreateProfileOpen(true)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.openSettingsText}>+ Add profile</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             )}
@@ -573,6 +665,18 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
           </View>
         </View>
       </Modal>
+
+    <CreateManagedProfileSheet
+      visible={createProfileOpen}
+      onClose={() => setCreateProfileOpen(false)}
+      onCreated={() => {
+        if (house) {
+          getDeviceProfiles().then(all =>
+            setManagedProfiles(all.filter(p => p.isManaged && p.houseId === house.id))
+          )
+        }
+      }}
+    />
     </>
   )
 }
