@@ -45,6 +45,7 @@ interface ChoreParams {
   rotationEnabled: boolean
   houseId: string
   createdBy: string
+  pointValue: number
 }
 
 interface AddChoreSheetProps {
@@ -72,6 +73,7 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
     const [daysOfWeek, setDaysOfWeek] = useState<number[]>([1])
     const [oneTimeDate, setOneTimeDate] = useState<Date>(new Date())
     const [showDatePicker, setShowDatePicker] = useState(false)
+    const [pointValue, setPointValue] = useState(editingChore?.point_value ?? 10)
     const [saving, setSaving] = useState(false)
     const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -88,6 +90,7 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
       const d = new Date(); d.setHours(8, 0, 0, 0)
       setReminderTime(d)
       setShowReminderPicker(false)
+      setPointValue(10)
     }, [currentUserId])
 
     useEffect(() => {
@@ -109,6 +112,7 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
                 : [1]
           )
         }
+        setPointValue(editingChore?.point_value ?? 10)
         setRotationEnabled(editingChore.rotation_enabled ?? false)
         if (editingChore.reminder_time) {
           setReminderEnabled(true)
@@ -150,7 +154,7 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
           const result = await onUpdate(editingChore.id, {
             name: name.trim(), assignedTo, dueDate: dueDateStr,
             notes: notes.trim() || null, frequency, daysOfWeek: days,
-            reminderTime: reminderStr, rotationEnabled,
+            reminderTime: reminderStr, rotationEnabled, pointValue,
           })
           error = result.error
         } else {
@@ -158,6 +162,7 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
             name: name.trim(), assignedTo, dueDate: dueDateStr,
             notes: notes.trim() || null, frequency, daysOfWeek: days,
             reminderTime: reminderStr, rotationEnabled, houseId, createdBy: currentUserId,
+            pointValue,
           })
           error = result.error
         }
@@ -365,6 +370,18 @@ export const AddChoreSheet = forwardRef<BottomSheet, AddChoreSheetProps>(
               value={notes}
               onChangeText={setNotes}
               multiline
+            />
+
+            {/* Points */}
+            <Text style={styles.fieldLabel}>Points</Text>
+            <TextInput
+              style={styles.input}
+              value={String(pointValue)}
+              onChangeText={v => setPointValue(Math.max(1, parseInt(v.replace(/[^0-9]/g, '')) || 1))}
+              keyboardType="number-pad"
+              maxLength={4}
+              placeholder="10"
+              placeholderTextColor={Colors.onSurfaceVariant}
             />
 
             {/* Rotation */}

@@ -148,6 +148,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
     rotationEnabled: boolean
     houseId: string
     createdBy: string
+    pointValue: number
   }): Promise<{ error: string | null }> {
     const { error } = await supabase.from('chores').insert({
       name: params.name,
@@ -160,6 +161,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
       rotation_enabled: params.rotationEnabled,
       house_id: params.houseId,
       created_by: params.createdBy,
+      point_value: params.pointValue,
     })
     if (!error) await fetchAll()
     return { error: error?.message ?? null }
@@ -176,6 +178,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
       daysOfWeek?: number[] | null
       reminderTime?: string | null
       rotationEnabled?: boolean
+      pointValue?: number
     }
   ): Promise<{ error: string | null }> {
     const patch: Record<string, unknown> = {}
@@ -187,6 +190,7 @@ export function useChores(houseId: string | undefined, selectedDate: string) {
     if (updates.daysOfWeek !== undefined) patch.days_of_week = updates.daysOfWeek
     if (updates.reminderTime !== undefined) patch.reminder_time = updates.reminderTime
     if (updates.rotationEnabled !== undefined) patch.rotation_enabled = updates.rotationEnabled
+    if (updates.pointValue !== undefined) patch.point_value = updates.pointValue
     const { error } = await supabase.from('chores').update(patch).eq('id', choreId)
     if (!error) await fetchAll()
     return { error: error?.message ?? null }
