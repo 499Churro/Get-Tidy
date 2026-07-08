@@ -15,6 +15,7 @@ const baseChore: Chore = {
   archived_at: null,
   created_at: '2026-06-22T00:00:00Z',
   rotation_enabled: false,
+  point_value: 1,
 }
 
 const mondayDate = '2026-06-22' // Known Monday

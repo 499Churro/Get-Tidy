@@ -42,6 +42,7 @@ export interface Chore {
   archived_at: string | null
   created_at: string
   rotation_enabled: boolean
+  point_value: number
   assigned_profile?: Profile
 }
 
@@ -93,4 +94,44 @@ export interface PersonalMomentum {
   target_days: number
   reward_text: string | null
   has_goal: boolean
+}
+
+export interface PointLedger {
+  id: string
+  house_id: string
+  user_id: string
+  amount: number
+  reason: 'chore_completion' | 'chore_completion_reversal' | 'reward_redemption'
+  chore_id: string | null
+  reward_id: string | null
+  created_at: string
+}
+
+export interface Reward {
+  id: string
+  house_id: string
+  created_by: string
+  name: string
+  emoji: string
+  point_cost: number
+  requires_approval: boolean
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type RedemptionStatus = 'pending' | 'approved' | 'denied'
+
+export interface Redemption {
+  id: string
+  house_id: string
+  reward_id: string
+  user_id: string
+  status: RedemptionStatus
+  point_cost_at_request: number
+  reward_name_snapshot: string
+  created_at: string
+  updated_at: string
+  resolved_at: string | null
+  profile?: Profile
 }
