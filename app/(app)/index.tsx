@@ -13,6 +13,9 @@ import { HeroCard } from '@/components/chores/HeroCard'
 import { TidyLogo } from '@/components/ui/TidyLogo'
 import { MaterialIcons } from '@expo/vector-icons'
 import { HouseSettingsSheet } from '@/components/house/HouseSettingsSheet'
+import { Avatar } from '@/components/ui/Avatar'
+import { ProfileSwitcherSheet } from '@/components/profiles/ProfileSwitcherSheet'
+import { CreateManagedProfileSheet } from '@/components/profiles/CreateManagedProfileSheet'
 import { Colors, Fonts, Shadows, AvatarGradients } from '@/constants/theme'
 import { useUserAccent } from '@/context/UserAccentContext'
 import { getChoresForDay, getProgressDotColor, getMondayOfWeek } from '@/lib/chores'
@@ -109,6 +112,8 @@ export default function HomeScreen() {
   const [selectedDate, setSelectedDate] = useState(todayLocalISO())
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [profileSwitcherOpen, setProfileSwitcherOpen] = useState(false)
+  const [createProfileOpen, setCreateProfileOpen] = useState(false)
 
   const { chores, completions, getChoresForSelectedDay, markDone, undoMarkDone, refetch } = useChores(house?.id, selectedDate)
   const [refreshing, setRefreshing] = useState(false)
@@ -336,6 +341,18 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => setProfileSwitcherOpen(true)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          activeOpacity={0.7}
+        >
+          <Avatar
+            uri={profile?.avatar_url ?? null}
+            displayName={profile?.display_name ?? '?'}
+            colorIndex={profile?.avatar_color_index ?? 0}
+            size={36}
+          />
+        </TouchableOpacity>
         <TidyLogo />
         <TouchableOpacity
           onPress={() => setSettingsOpen(true)}
@@ -529,6 +546,19 @@ export default function HomeScreen() {
         </Animated.View>
       )}
 
+      <ProfileSwitcherSheet
+        visible={profileSwitcherOpen}
+        onClose={() => setProfileSwitcherOpen(false)}
+        onAddProfile={() => {
+          setProfileSwitcherOpen(false)
+          setCreateProfileOpen(true)
+        }}
+      />
+      <CreateManagedProfileSheet
+        visible={createProfileOpen}
+        onClose={() => setCreateProfileOpen(false)}
+        onCreated={() => setProfileSwitcherOpen(true)}
+      />
       <HouseSettingsSheet visible={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </SafeAreaView>
   )
