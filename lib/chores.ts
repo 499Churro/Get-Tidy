@@ -27,10 +27,8 @@ export function getChoresForDay(chores: Chore[], forDate: string): Chore[] {
     if (chore.due_date) return chore.due_date === forDate
 
     // Repeating: never show on dates before the chore was created.
-    // created_at is UTC from Supabase; forDate is local — convert to local date for comparison.
-    const ca = new Date(chore.created_at)
-    const createdLocalISO = `${ca.getFullYear()}-${String(ca.getMonth() + 1).padStart(2, '0')}-${String(ca.getDate()).padStart(2, '0')}`
-    if (forDate < createdLocalISO) return false
+    // Use the UTC date portion of created_at (consistent with how biweekly uses .slice(0,10)).
+    if (forDate < chore.created_at.slice(0, 10)) return false
 
     // Legacy daily — show every day
     if (chore.frequency === 'daily') return true
