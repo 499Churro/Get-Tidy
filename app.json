@@ -46,7 +46,8 @@
       "expo-apple-authentication",
       "expo-notifications",
       "expo-localization",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-splash-screen"
     ],
     "experiments": {
       "typedRoutes": true

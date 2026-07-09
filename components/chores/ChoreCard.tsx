@@ -37,10 +37,10 @@ export function ChoreCard({ chore, currentUserId, onToggle, onEdit, onDelete, on
       options.push({ text: 'Assign to me', onPress: onTakeOver })
     }
     options.push({ text: 'Edit', onPress: onEdit })
-    options.push({ text: 'Delete', style: 'destructive', onPress: () => {
+    options.push({ text: 'Remove', style: 'destructive', onPress: () => {
       Alert.alert('Remove chore?', `"${chore.name}" will be hidden from active lists. Past completions stay saved.`, [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: onDelete },
+        { text: 'Remove', style: 'destructive', onPress: onDelete },
       ])
     }})
     options.push({ text: 'Cancel', style: 'cancel' })
