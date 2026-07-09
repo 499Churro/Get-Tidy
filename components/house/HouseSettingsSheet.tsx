@@ -25,7 +25,7 @@ import { Colors, Fonts, Shadows, AvatarGradients } from '@/constants/theme'
 import { useUserAccent } from '@/context/UserAccentContext'
 import { supabase } from '@/lib/supabase'
 import { getRecapCopy } from '@/lib/houseMomentum'
-import { getDeviceProfiles, removeDeviceProfile, DeviceProfile } from '@/lib/deviceProfiles'
+import { getDeviceProfiles, removeDeviceProfile, updateDeviceProfile, DeviceProfile } from '@/lib/deviceProfiles'
 import { CreateManagedProfileSheet } from '@/components/profiles/CreateManagedProfileSheet'
 
 interface HouseSettingsSheetProps {
@@ -55,6 +55,14 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
   // Device profiles state
   const [managedProfiles, setManagedProfiles] = useState<DeviceProfile[]>([])
   const [createProfileOpen, setCreateProfileOpen] = useState(false)
+
+  // Edit managed profile state
+  const [editingManagedMember, setEditingManagedMember] = useState<{
+    userId: string; displayName: string; colorIndex: number
+  } | null>(null)
+  const [editingManagedName, setEditingManagedName] = useState('')
+  const [editingManagedColor, setEditingManagedColor] = useState(0)
+  const [savingManagedEdit, setSavingManagedEdit] = useState(false)
 
   useEffect(() => {
     if (visible && house) {
@@ -234,6 +242,37 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
     )
   }
 
+  function openEditManagedMember(userId: string, displayName: string, colorIndex: number) {
+    setEditingManagedName(displayName)
+    setEditingManagedColor(colorIndex)
+    setEditingManagedMember({ userId, displayName, colorIndex })
+  }
+
+  async function handleSaveManagedMember() {
+    if (!editingManagedMember || !editingManagedName.trim()) return
+    setSavingManagedEdit(true)
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ display_name: editingManagedName.trim(), avatar_color_index: editingManagedColor })
+        .eq('id', editingManagedMember.userId)
+      if (error) { Alert.alert('Error', error.message); return }
+      await updateDeviceProfile(editingManagedMember.userId, {
+        displayName: editingManagedName.trim(),
+        avatarColorIndex: editingManagedColor,
+      })
+      setManagedProfiles(prev => prev.map(p =>
+        p.userId === editingManagedMember.userId
+          ? { ...p, displayName: editingManagedName.trim(), avatarColorIndex: editingManagedColor }
+          : p
+      ))
+      await refetchHouse()
+      setEditingManagedMember(null)
+    } finally {
+      setSavingManagedEdit(false)
+    }
+  }
+
   if (!house) return null
 
   return (
@@ -330,7 +369,10 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
                   <View style={styles.divider} />
                   <TouchableOpacity
                     style={styles.openSettingsRow}
-                    onPress={() => setCreateProfileOpen(true)}
+                    onPress={() => {
+                      onClose()
+                      setTimeout(() => setCreateProfileOpen(true), 350)
+                    }}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.openSettingsText}>+ Add profile</Text>
@@ -515,11 +557,20 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
                       )}
                       {!isMe && isAdmin && (
                         <TouchableOpacity
-                          onPress={() =>
+                          onPress={() => {
+                            const isManaged = managedProfiles.some(mp => mp.userId === m.user_id)
                             Alert.alert(
                               m.profile!.display_name,
                               'What would you like to do?',
                               [
+                                ...(isManaged ? [{
+                                  text: 'Edit name & color',
+                                  onPress: () => openEditManagedMember(
+                                    m.user_id,
+                                    m.profile!.display_name,
+                                    m.profile!.avatar_color_index,
+                                  ),
+                                }] : []),
                                 {
                                   text: isMemberAdmin ? 'Make member' : 'Make admin',
                                   onPress: () => handleChangeMemberRole(m.user_id, isMemberAdmin ? 'member' : 'admin'),
@@ -532,7 +583,7 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
                                 { text: 'Cancel', style: 'cancel' },
                               ]
                             )
-                          }
+                          }}
                           activeOpacity={0.7}
                         >
                           <Text style={styles.editMemberBtn}>Edit</Text>
@@ -677,7 +728,65 @@ export function HouseSettingsSheet({ visible, onClose }: HouseSettingsSheetProps
         }
       }}
     />
-    </>
+
+    {/* Edit managed profile Modal */}
+    <Modal
+      visible={!!editingManagedMember}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setEditingManagedMember(null)}
+    >
+      <View style={styles.profileOverlay}>
+        <View style={styles.profileSheet}>
+          <View style={styles.handle} />
+          <Text style={styles.profileTitle}>Edit profile</Text>
+
+          <Text style={styles.modalLabel}>Name</Text>
+          <TextInput
+            style={styles.modalInput}
+            value={editingManagedName}
+            onChangeText={setEditingManagedName}
+            placeholder="Display name"
+            placeholderTextColor={Colors.onSurfaceVariant}
+            autoCapitalize="words"
+            returnKeyType="done"
+          />
+
+          <Text style={styles.modalLabel}>Color</Text>
+          <View style={styles.colorGrid}>
+            {AvatarGradients.map(([start, end], idx) => (
+              <TouchableOpacity
+                key={idx}
+                onPress={() => setEditingManagedColor(idx)}
+                activeOpacity={0.8}
+                style={styles.colorSwatch}
+              >
+                <LinearGradient
+                  colors={[start, end]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.colorSwatchGrad, editingManagedColor === idx && styles.colorSwatchSelected]}
+                />
+                {editingManagedColor === idx && <Text style={styles.colorCheck}>✓</Text>}
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <TouchableOpacity
+            style={[styles.saveBtn, { backgroundColor: accentColor }, (!editingManagedName.trim() || savingManagedEdit) && { opacity: 0.4 }]}
+            onPress={handleSaveManagedMember}
+            disabled={!editingManagedName.trim() || savingManagedEdit}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.saveBtnText}>{savingManagedEdit ? 'Saving…' : 'Save changes'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setEditingManagedMember(null)} style={styles.cancelBtn}>
+            <Text style={styles.cancelBtnText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+</>
   )
 }
 
