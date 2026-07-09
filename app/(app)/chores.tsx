@@ -100,8 +100,8 @@ export default function ChoresManagerScreen() {
 
   function confirmDelete(chore: Chore) {
     Alert.alert(
-      'Archive chore?',
-      `"${chore.name}" will be removed for everyone.`,
+      'Remove chore?',
+      `"${chore.name}" will be hidden from active lists. Past completions stay saved.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {

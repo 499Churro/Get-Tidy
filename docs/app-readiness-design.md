@@ -1,3 +1,5 @@
+> **SUPERSEDED** — Pre-dates the current roles/store gamification direction. Issues tracked here have since been resolved. Kept for historical reference.
+
 # App Readiness Design Document
 
 **Goal:** Identify and resolve everything blocking (a) Phase 2 gamification schema work and (b) public App Store submission. No implementation until approved.

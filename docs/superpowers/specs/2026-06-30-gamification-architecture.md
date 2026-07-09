@@ -1,3 +1,5 @@
+> **SUPERSEDED** — This architecture spec references `score_ledger`, `house_scores`, and leaderboard tables that were not built. Current architecture uses `point_ledger`, `rewards`, and `redemptions` per `docs/superpowers/specs/2026-07-03-roles-and-store-design.md`. Kept for historical reference.
+
 # Gamification Architecture — Tidy
 
 **Status:** Approved  

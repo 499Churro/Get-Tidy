@@ -1,3 +1,5 @@
+> **SUPERSEDED** — References an early gamification direction (streaks, scores, leaderboard) that was redesigned. Current product direction is in `docs/superpowers/specs/2026-07-03-roles-and-store-design.md`. Kept for historical reference.
+
 # Phase 2 Readiness — Design Document
 
 **Goal:** Close the remaining pre-gamification issues, establish a clean baseline, and lay the schema + architecture foundation for Phase 2 (streaks, scores, leaderboard) without implementing Phase 2 UI yet.

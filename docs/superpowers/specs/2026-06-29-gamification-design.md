@@ -1,3 +1,5 @@
+> **SUPERSEDED** — This spec explored `house_scores`, leaderboards, and an earlier gamification model that was replaced by the point ledger + reward store direction. Superseded by `docs/superpowers/specs/2026-07-03-roles-and-store-design.md`. Kept for historical reference.
+
 # Tidy — Phase 2 Gamification Design
 
 **Date:** 2026-06-29
